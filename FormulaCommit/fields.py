@@ -8,7 +8,7 @@ class StringField:
         self._value = None
 
     def parses(self):
-        ParseManager()
+        pass
 
 
 class IntegerField:
