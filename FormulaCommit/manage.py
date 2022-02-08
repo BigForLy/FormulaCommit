@@ -1,37 +1,49 @@
 import graphlib
-import datetime
 
 from FormulaCommit.parse import ParseManager
 
-data = {"@d": "@a-@c",
+
+class FormulaManager:
+
+    def __init__(self, data):
+        self.__data = data
+        self.__result = {}
+        self.__parse_manager = ParseManager()
+
+    @staticmethod
+    def __to_fixed_range(number, digit=0):  # todo: Переименовать
+        """
+        Округление перед выводом пользователю, позволяет дополнить нулями значение
+        Использует округление в большую сторону, применять для проставления нулей
+        :param number: not str object
+        :param digit: количество знаков после запятой
+        :return: значение с определенным количеством знаков после запятой
+        """
+        return f"{number:.{digit}f}"
+
+    def calc(self):
+        graph = {}
+        for key, value in self.__data.items():
+            graph.update({key: set(self.__parse_manager.parses(value))})
+
+        calculated_graph = tuple(graphlib.TopologicalSorter(graph).static_order())
+
+        for param in calculated_graph:
+            if param.find('@') == -1:  # число
+                self.__result.update({param: float(param)})
+            else:  # строка
+                self.__result.update({param: float(eval(self.__parse_manager.calc(self.__data[param], self.__result)))})
+
+        print(self.__result)
+
+
+data = {"@d": "@a**@c",
         "@ab": "@d+@c",
-        "@e": "round(@z, 0)",
+        "@e": "round(@z, int(1))",
         "@z": "@a+@ab",
         "@a": "5.4",
         "@b": "10",
         "@c": "@a+@b"}
-print(datetime.datetime.now())
-graph = {}
-
-parse_manager = ParseManager()
-
-for key, value in data.items():
-    graph.update({key: set(parse_manager.parses(value))})
-
-print(graph)
-
-ts = graphlib.TopologicalSorter(graph)
-z = tuple(ts.static_order())
-print(z)
-
-data2 = {}
-
-for param in z:
-    if param.find('@') == -1:  # число
-        data2.update({param: float(param)})
-    else:  # строка
-        data2.update({param: float(eval(parse_manager.calc(data[param], data2)))})
 
 
-print(data2)
-print(datetime.datetime.now())
+FormulaManager(data).calc()

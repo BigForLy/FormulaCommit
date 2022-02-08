@@ -2,7 +2,7 @@ class ParseManager:
 
     def __init__(self):
         self.__OPERATORS = {'+', '-', '*', '/'}
-        self.__func = {'round'}
+        self.__func = {'round', 'int'}
         self.isString = False
 
     def parses(self, formula_string):
