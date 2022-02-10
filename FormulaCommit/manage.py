@@ -23,27 +23,22 @@ class FormulaManager:
 
     def calc(self):
         graph = {}
-        for key, value in self.__data.items():
-            graph.update({key: set(self.__parse_manager.parses(value))})
+        for key, field_class in self.__data.items():
+            graph.update({key: field_class._get_dependence()})
+            # graph.update({key: set(self.__parse_manager.parses(field_class))})
 
         calculated_graph = tuple(graphlib.TopologicalSorter(graph).static_order())
 
         for param in calculated_graph:
-            if param.find('@') == -1:  # число
+            if '@' in param:
+                current_field = self.__data[param]
+                self.__result.update({param: current_field.calc(self.__result)})
+            else:
                 self.__result.update({param: float(param)})
-            else:  # строка
-                self.__result.update({param: float(eval(self.__parse_manager.calc(self.__data[param], self.__result)))})
+
+            # if '@' not in param:  # число
+            #     self.__result.update({param: float(param)})
+            # else:  # формула-строка
+            #     self.__result.update({param: (eval(self.__parse_manager.calc(self.__data[param], self.__result)))})
 
         print(self.__result)
-
-
-data = {"@d": "@a**@c",
-        "@ab": "@d+@c",
-        "@e": "round(@z, int(1))",
-        "@z": "@a+@ab",
-        "@a": "5.4",
-        "@b": "10",
-        "@c": "@a+@b"}
-
-
-FormulaManager(data).calc()
