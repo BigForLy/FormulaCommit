@@ -24,7 +24,7 @@ class ParseManager:
         if param:
             yield param if self.isString else param  # float(param)
 
-    def calc(self, formula_string, params):
+    def calc(self, formula_string, field_value_dict):
         self.isString = False
         param = ''
         calc_string = ''
@@ -33,7 +33,8 @@ class ParseManager:
                 param += s
             elif s in self.__OPERATORS or s in "( ,)":  # garbage
                 if param:
-                    calc_string += str(params[param]) if params.get(param) and self.isString else param
+                    calc_string += field_value_dict[param] if field_value_dict.get(
+                        param) and self.isString else param
                     param = ''
                 calc_string += s
                 self.isString = False
@@ -41,12 +42,5 @@ class ParseManager:
                 self.isString = True
                 param += s
         if param:
-            calc_string += str(params[param]) if params.get(param) and self.isString else param
+            calc_string += str(field_value_dict[param]) if field_value_dict.get(param) and self.isString else param
         return calc_string
-
-
-
-
-# a = ParseManager()
-# p = a.parses('@a + @b-@ab_2*@aab_1')
-# print(set(p))

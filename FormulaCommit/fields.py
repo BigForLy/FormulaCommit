@@ -5,9 +5,10 @@ class AbstractField:
     def __init__(self):
         self._formula = None
         self._value = None
-        self._dependence = None  # set()
+        self._dependence = None  # set()  todo: не используется
 
-    def _get_dependence(self):
+    @property
+    def dependence(self):
         self._dependence = set(ParseManager().parses(self._formula))
         return self._dependence
 
@@ -17,12 +18,12 @@ class IntegerField(AbstractField):
     def __init__(self, *, symbol, formula, range=0):
         super().__init__()
         self._symbol = symbol
-        self._type = int
+        # self._type = int
         self._formula = formula
         # self._range = range
 
-    def calc(self, all_param):
-        self._value = eval(ParseManager().calc(self._formula, all_param))
+    def calc(self, field_value_dict):
+        self._value = ParseManager().calc_sql(self._formula, field_value_dict)
         return self._value
 
 
