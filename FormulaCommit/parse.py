@@ -1,4 +1,4 @@
-class ParseManager:
+class ParsePythonManager:
 
     def __init__(self):
         self.__OPERATORS = {'+', '-', '*', '/'}
