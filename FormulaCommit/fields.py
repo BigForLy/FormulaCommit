@@ -16,9 +16,9 @@ class AbstractField:
         self._dependence = set(self._independent_parser_manager.parses(self._formula))
         return self._dependence
 
-    def calc(self, fields_values_dict):
-        self._value = self._independent_parser_manager.calc(self._formula, fields_values_dict)  # todo не всегда корректный параметр необходимо использовать интерфейс
-        return self._value
+    # def calc(self, fields_values_dict):
+    #     self._value = self._independent_parser_manager.calc(self._formula, fields_values_dict)  # todo не всегда корректный параметр необходимо использовать интерфейс
+    #     return self._value
 
 
 class IntegerField(AbstractField):

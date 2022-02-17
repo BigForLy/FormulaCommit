@@ -2,7 +2,6 @@ class ParseSqlManager:
 
     def __init__(self):
         self.__OPERATORS = {'+', '-', '*', '/'}
-        self.__func = {'round', 'int'}
         self.isString = False
 
     def parses(self, formula_string):
@@ -21,5 +20,5 @@ class ParseSqlManager:
         if param and self.isString:
             yield param if self.isString else param  # float(param)
 
-    def calc(self, formula_string, fields_values_dict):
-        return formula_string
+    # def calc(self, formula_string, fields_values_dict):
+    #     return formula_string

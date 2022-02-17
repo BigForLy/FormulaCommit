@@ -42,5 +42,5 @@ class ParsePythonManager:
                 self.isString = True
                 param += s
         if param:
-            calc_string += str(field_value_dict[param]) if field_value_dict.get(param) and self.isString else param
+            calc_string += eval(str(field_value_dict[param]) if field_value_dict.get(param) and self.isString else param)
         return calc_string
