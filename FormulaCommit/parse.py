@@ -24,7 +24,7 @@ class ParsePythonManager:
         if param:
             yield param if self.isString else param  # float(param)
 
-    def calc(self, formula_string, field_value_dict):
+    def prepare_calc(self, formula_string, field_value_dict):
         self.isString = False
         param = ''
         calc_string = ''
@@ -33,7 +33,7 @@ class ParsePythonManager:
                 param += s
             elif s in self.__OPERATORS or s in "( ,)":  # garbage
                 if param:
-                    calc_string += field_value_dict[param] if field_value_dict.get(
+                    calc_string += f'({field_value_dict[param]})' if field_value_dict.get(
                         param) and self.isString else param
                     param = ''
                 calc_string += s
@@ -42,5 +42,5 @@ class ParsePythonManager:
                 self.isString = True
                 param += s
         if param:
-            calc_string += eval(str(field_value_dict[param]) if field_value_dict.get(param) and self.isString else param)
+            calc_string += f'({field_value_dict[param]})' if field_value_dict.get(param) and self.isString else param
         return calc_string

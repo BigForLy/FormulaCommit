@@ -6,19 +6,18 @@ class AbstractField:
     def __init__(self):
         self._formula = None
         self._value = None
-        self._dependence = None  # set()  todo: не используется
         self._independent_parser_manager = None
 
     @property
     def dependence(self):
         # # self._dependence = set(ParseManager().parses(self._formula))
         # self._dependence = set(ParseSqlManager().parses(self._formula))
-        self._dependence = set(self._independent_parser_manager.parses(self._formula))
-        return self._dependence
+        # self._dependence = set(self._independent_parser_manager.parses(self._formula))
+        return set(self._independent_parser_manager.parses(self._formula))
 
-    # def calc(self, fields_values_dict):
-    #     self._value = self._independent_parser_manager.calc(self._formula, fields_values_dict)  # todo не всегда корректный параметр необходимо использовать интерфейс
-    #     return self._value
+    def prepare_calc(self, fields_values_dict):
+        self._value = self._independent_parser_manager.prepare_calc(self._formula, fields_values_dict)  # todo не всегда корректный параметр необходимо использовать интерфейс
+        # return self._value
 
 
 class IntegerField(AbstractField):
@@ -28,10 +27,9 @@ class IntegerField(AbstractField):
         self._symbol = symbol
         self._formula = formula
 
-    # def calc2(self, field_value_dict):
-    #     # self._value = ParseManager().calc(self._formula, field_value_dict)
-    #     self._value = ParseSqlManager().calc(self._formula, field_value_dict)
-    #     return self._value
+    def calc(self):
+        self._value = float(eval(self._value))  # Расчет, округление
+        return self._value
 
 
 class StringField(AbstractField):

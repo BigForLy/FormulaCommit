@@ -2,6 +2,7 @@ import graphlib
 
 from sqlalchemy import text
 
+from FormulaCommit.fields import IntegerField
 from FormulaCommit.parse import ParsePythonManager
 from FormulaCommit.parse_sql import ParseSqlManager
 
@@ -110,9 +111,9 @@ class FormulaManagerPython(AbstractFormulaManager):
 
     def _collects_data_for_graph(self):
         graph = {}
-        for key, field_class in self.__data.items():
-            field_class._independent_parser_manager = ParsePythonManager()
-            graph.update({key: field_class.dependence})
+        for key, current_field in self.__data.items():
+            current_field._independent_parser_manager = ParsePythonManager()
+            graph.update({key: current_field.dependence})
         return graph
 
     def _calc_result(self, calculated_graph):
@@ -121,27 +122,11 @@ class FormulaManagerPython(AbstractFormulaManager):
                 current_field = self.__data[param]
                 # self._result.update({param: current_field.calc(self._result)})
                 self._result.update({param: self.__calculation(current_field)})
-            else:
+            else:  # не формула
                 self._result.update({param: float(param)})
 
     def __calculation(self, current_field):
-        # def calc(self, formula_string, field_value_dict):
-        self.isString = False
-        element = ''
-        calc_string = ''
-        for s in current_field._formula:
-            if s in '1234567890.' and not self.isString:  # number
-                element += s
-            elif s in self.__OPERATORS or s in "( ,)":  # garbage
-                if element:
-                    calc_string += self._result[element] if self._result.get(
-                        element) and self.isString else element
-                    element = ''
-                calc_string += s
-                self.isString = False
-            else:  # string
-                self.isString = True
-                element += s
-        if element:
-            calc_string += str(self._result[element]) if self._result.get(element) and self.isString else element
-        return calc_string
+        current_field.prepare_calc(self._result)  # Обновляет value внутри field
+        current_field.calc()
+        return current_field._value
+
