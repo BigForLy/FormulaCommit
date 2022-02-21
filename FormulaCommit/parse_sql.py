@@ -20,5 +20,6 @@ class ParseSqlManager:
         if param and self.isString:
             yield param if self.isString else param  # float(param)
 
-    def prepare_calc(self, formula_string, fields_values_dict):
-        return formula_string
+    @staticmethod
+    def prepare_calc(*, field_symbol, formula_string):
+        return f"set {field_symbol}:={formula_string};"  #  as \"{field_symbol}\"

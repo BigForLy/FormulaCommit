@@ -24,7 +24,7 @@ class ParsePythonManager:
         if param:
             yield param if self.isString else param  # float(param)
 
-    def prepare_calc(self, formula_string, field_value_dict):
+    def prepare_calc(self, *, formula_string, field_value_dict):
         self.isString = False
         param = ''
         calc_string = ''

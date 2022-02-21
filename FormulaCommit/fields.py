@@ -4,20 +4,31 @@ from FormulaCommit.parse_sql import ParseSqlManager
 
 class AbstractField:
     def __init__(self):
+        self._symbol = None
         self._formula = None
         self._value = None
         self._independent_parser_manager = None
 
     @property
     def dependence(self):
-        # # self._dependence = set(ParseManager().parses(self._formula))
-        # self._dependence = set(ParseSqlManager().parses(self._formula))
-        # self._dependence = set(self._independent_parser_manager.parses(self._formula))
         return set(self._independent_parser_manager.parses(self._formula))
 
-    def prepare_calc(self, fields_values_dict):
-        self._value = self._independent_parser_manager.prepare_calc(self._formula, fields_values_dict)  # todo не всегда корректный параметр необходимо использовать интерфейс
-        # return self._value
+    def prepare_calc(self, *, fields_values_dict=None):
+        if type(self._independent_parser_manager) == ParseSqlManager:
+            self.__prepare_calc_mysql()
+        elif type(self._independent_parser_manager) == ParsePythonManager:
+            self.__prepare_calc_python(fields_values_dict=fields_values_dict)
+
+    def __prepare_calc_mysql(self):
+        self._value = self._independent_parser_manager.prepare_calc(field_symbol=self._symbol,
+                                                                    formula_string=self._formula)
+
+    def __prepare_calc_python(self, *, fields_values_dict):
+        self._value = self._independent_parser_manager.prepare_calc(formula_string=self._formula,
+                                                                    field_value_dict=fields_values_dict)
+
+    # def prepare_calc(self, fields_values_dict):
+    #     self._value = self._independent_parser_manager.prepare_calc(self._formula, fields_values_dict)  # todo не всегда корректный параметр необходимо использовать интерфейс
 
 
 class IntegerField(AbstractField):
@@ -28,7 +39,7 @@ class IntegerField(AbstractField):
         self._formula = formula
 
     def calc(self):
-        self._value = float(eval(self._value))  # Расчет, округление
+        self._value = float(eval(str(self._value)))  # Расчет, округление
         return self._value
 
 

@@ -22,6 +22,10 @@ def test_connection():
 z = test_connection()
 # p = z.execute(text("select @z := 1 + 2 as z"))
 # p = p.all()
+# p = z.execute("set @z := 1 + 2; select @z")
+# p = p.all()
+# p = z.execute(text("set @z := 1 + 2; select @z"))
+# p = p.all()
 
 
 data = {"@d": "@a**@c",
@@ -39,8 +43,7 @@ data_formula2 = {"@z": IntegerField(symbol="@z", formula="1+2"),
 
 data_new = {"@d": IntegerField(symbol="@d", formula="@a**@c"),
             "@ab": IntegerField(symbol="@ab", formula="@d+@c"),
-            # "@e": IntegerField(symbol="@e", formula="round(@z, int(1))"),
-            "@e": IntegerField(symbol="@e", formula="@z"),
+            "@e": IntegerField(symbol="@e", formula="round(@z, int(1))"),
             "@z": IntegerField(symbol="@z", formula="@a+@ab + 1"),
             "@a": IntegerField(symbol="@a", formula="5.4"),
             "@b": IntegerField(symbol="@b", formula="10"),

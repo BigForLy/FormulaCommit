@@ -1,8 +1,6 @@
 import graphlib
 
 from sqlalchemy import text
-
-from FormulaCommit.fields import IntegerField
 from FormulaCommit.parse import ParsePythonManager
 from FormulaCommit.parse_sql import ParseSqlManager
 
@@ -45,23 +43,6 @@ class AbstractFormulaManager:
     def _calc_result(calculated_graph):
         pass
 
-    # def calc_python(self):
-    #     graph = {}
-    #     for key, field_class in self.__data.items():
-    #         field_class._independent_parser_manager = ParsePythonManager()
-    #         graph.update({key: field_class.dependence})
-    #
-    #     calculated_graph = self._calculated_graph(graph)
-    #
-    #     for param in calculated_graph:
-    #         if '@' in param:  # переменная
-    #             current_field = self.__data[param]
-    #             self._result.update({param: current_field.calc(self._result)})
-    #         else:
-    #             self._result.update({param: float(param)})
-    #
-    #     print(self._result)
-
 
 class FormulaManagerMySql(AbstractFormulaManager):
 
@@ -80,26 +61,34 @@ class FormulaManagerMySql(AbstractFormulaManager):
 
     def _calc_result(self, calculated_graph):
         calc_string = self.__prepare_formula_to_string_mysql(calculated_graph)
-        self.__data_processing_mysql(session=self.__session, calc_string=calc_string)
+        data_result = self.__data_processing_mysql(session=self.__session, calc_string=calc_string)
+        self.__post_processing(data_result)
 
     def __prepare_formula_to_string_mysql(self, calculated_graph):
         calc_formula_list = []
         for field_symbol in calculated_graph:
             current_field = self.__data[field_symbol]
-            calc_formula_list.append(
-                f"{field_symbol} := {self.__calculation(current_field)} as \"{field_symbol}\"")  # todo можно вернуть формулу, убрать todo если переделаю на интерфейс
+            calc_formula_list.append(self.__calculation(current_field))
 
-        calc_string = 'select ' + ', '.join(calc_formula_list)
+        calc_string = ' '.join(calc_formula_list)
         print(calc_string)
         return calc_string
 
     @staticmethod
     def __calculation(current_field):
-        return current_field._formula
+        current_field.prepare_calc()  # Обновляет value внутри field
+        return current_field._value  # тут формула mysql
 
     def __data_processing_mysql(self, session, calc_string):
-        dataset = session.execute(text(calc_string)).all()
-        self._result = dict(dataset[0]._mapping)
+        session.execute(text(calc_string))
+        dataset = session.execute(text('select ' + ', '.join(self.__data.keys()))).all()
+        return dataset[0]._mapping
+
+    def __post_processing(self, data_result):
+        for key, field_class in self.__data.items():
+            # current_field = self.__data[key]
+            field_class._value = data_result.get(key)
+            self._result.update({key: field_class.calc()})
 
 
 class FormulaManagerPython(AbstractFormulaManager):
@@ -108,12 +97,13 @@ class FormulaManagerPython(AbstractFormulaManager):
         super().__init__()
         self.__data = data
         self._result = {}
+        # self.__parser_manager = ParsePythonManager()
 
     def _collects_data_for_graph(self):
         graph = {}
-        for key, current_field in self.__data.items():
-            current_field._independent_parser_manager = ParsePythonManager()
-            graph.update({key: current_field.dependence})
+        for key, field_class in self.__data.items():
+            field_class._independent_parser_manager = ParsePythonManager()
+            graph.update({key: field_class.dependence})
         return graph
 
     def _calc_result(self, calculated_graph):
@@ -126,7 +116,7 @@ class FormulaManagerPython(AbstractFormulaManager):
                 self._result.update({param: float(param)})
 
     def __calculation(self, current_field):
-        current_field.prepare_calc(self._result)  # Обновляет value внутри field
+        current_field.prepare_calc(fields_values_dict=self._result)  # Обновляет value внутри field
         current_field.calc()
         return current_field._value
 
