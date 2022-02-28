@@ -23,3 +23,10 @@ def round(p, b):
 
 o = eval("round(1, 2.0)")
 print(o)
+
+a = set()
+
+a.update('q')
+
+
+print(a)

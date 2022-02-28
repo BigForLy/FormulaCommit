@@ -1,42 +1,51 @@
-from FormulaCommit.parse import ParsePythonManager
-from FormulaCommit.parse_sql import ParseSqlManager
-
-
 class AbstractField:
     def __init__(self):
         self._symbol = None
         self._formula = None
         self._value = None
-        self._independent_parser_manager = None
+        self._dependence = set()
 
     @property
     def dependence(self):
-        return set(self._independent_parser_manager.parses(self._formula))
+        """
+        Getter _dependence, обращаться как к атрибуту
+        :return: Множество всех существующих символьных обозначений в формуле
+        """
+        return self._dependence
 
-    def prepare_calc(self, *, fields_values_dict=None):
-        if type(self._independent_parser_manager) == ParseSqlManager:
-            self.__prepare_calc_mysql()
-        elif type(self._independent_parser_manager) == ParsePythonManager:
-            self.__prepare_calc_python(fields_values_dict=fields_values_dict)
+    @dependence.setter
+    def dependence(self, value):
+        """
+        Setter _dependence, обращаться как к переменной
+        :param value: Множество элементов
+        """
+        self._dependence = value
 
-    def __prepare_calc_mysql(self):
-        self._value = self._independent_parser_manager.prepare_calc(field_symbol=self._symbol,
-                                                                    formula_string=self._formula)
+    @property
+    def formula(self):
+        """
+        Getter _formula, обращаться как к атрибуту
+        :return: Строка с формулой
+        """
+        return self._formula
 
-    def __prepare_calc_python(self, *, fields_values_dict):
-        self._value = self._independent_parser_manager.prepare_calc(formula_string=self._formula,
-                                                                    field_value_dict=fields_values_dict)
-
-    # def prepare_calc(self, fields_values_dict):
-    #     self._value = self._independent_parser_manager.prepare_calc(self._formula, fields_values_dict)  # todo не всегда корректный параметр необходимо использовать интерфейс
+    @formula.setter
+    def formula(self, value):
+        """
+        Setter _formula, обращаться как к переменной
+        :param value: Строка с формулой
+        """
+        self._formula = value
 
 
 class IntegerField(AbstractField):
 
-    def __init__(self, *, symbol, formula):
+    def __init__(self, *, symbol, formula, value=None, opred_number=1):
         super().__init__()
         self._symbol = symbol
         self._formula = formula
+        self._value = value
+        self._opred_number = opred_number
 
     def calc(self):
         self._value = float(eval(str(self._value)))  # Расчет, округление
@@ -45,11 +54,15 @@ class IntegerField(AbstractField):
 
 class StringField(AbstractField):
 
-    def __init__(self, *, symbol, formula):
+    def __init__(self, *, symbol, formula, value=None, opred_number=1):
         super().__init__()
         self._symbol = symbol
-        self._type = str
         self._formula = formula
+        self._value = value
+        self._opred_number = opred_number
+
+    def calc(self):
+        return self._value
 
 
 class FloatField(AbstractField):

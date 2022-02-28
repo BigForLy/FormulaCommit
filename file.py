@@ -19,51 +19,47 @@ def test_connection():
     return session()
 
 
-z = test_connection()
+session = test_connection()
 # p = z.execute(text("select @z := 1 + 2 as z"))
 # p = p.all()
-# p = z.execute("set @z := 1 + 2; select @z")
-# p = p.all()
-# p = z.execute(text("set @z := 1 + 2; select @z"))
-# p = p.all()
 
+# Гост 18995.4-73
+data_formula2 = {"@t_1": IntegerField(symbol="@t_1", formula="", value="2", opred_number="1"),
+                 "@t1_1": IntegerField(symbol="@t1_1", formula="", value="1", opred_number="1"),
+                 "@h_1": IntegerField(symbol="@h_1", formula="", value="1", opred_number="1"),
+                 "@exp_1": IntegerField(symbol="@exp_1", formula="@t+0.00016*(@t-@t1)*@h", value="500",
+                                        opred_number="1"),
+                 "@t_2": IntegerField(symbol="@t_2", formula="", value="3", opred_number="2"),
+                 "@t1_2": IntegerField(symbol="@t1_2", formula="", value="1", opred_number="2"),
+                 "@h_2": IntegerField(symbol="@h_2", formula="", value="1", opred_number="2"),
+                 "@exp_2": IntegerField(symbol="@exp_2", formula="@t+0.00016*(@t-@t1)*@h", opred_number="2"),
+                 "@r1": IntegerField(symbol="@r1", formula="5+avg(@exp)")
+                 }
 
-data = {"@d": "@a**@c",
-        "@ab": "@d+@c",
-        "@e": "round(@z, int(1))",
-        "@z": "@a+@ab + 1",
-        "@a": "5.4",
-        "@b": "10",
-        "@c": "@a+@b"}
-
-data_formula2 = {"@z": IntegerField(symbol="@z", formula="1+2"),
-                 "@d": IntegerField(symbol="@d", formula="CASE WHEN @z >4 THEN 2 WHEN @z <=3 THEN 1 END"),
-                 "@p_1": IntegerField(symbol="@p_1", formula="1+2"),
-                 "@p_2": IntegerField(symbol="@p_2", formula="1+2")}
-
-data_new = {"@d": IntegerField(symbol="@d", formula="@a**@c"),
-            "@ab": IntegerField(symbol="@ab", formula="@d+@c"),
-            "@e": IntegerField(symbol="@e", formula="round(@z, int(1))"),
-            "@z": IntegerField(symbol="@z", formula="@a+@ab + 1"),
-            "@a": IntegerField(symbol="@a", formula="5.4"),
-            "@b": IntegerField(symbol="@b", formula="10"),
-            "@c": IntegerField(symbol="@c", formula="@a+@b")}
-
-data_formula = {"@exp": IntegerField(symbol="@exp", formula="2"),
-                "@exp_1": IntegerField(symbol="@exp_1", formula="2"),
-                "@exp_2": IntegerField(symbol="@exp_2", formula="3"),
-                "@result_1": IntegerField(symbol="@result_1", formula="avg(@exp)")}
+data_formula1 = {"@t_1": StringField(symbol="@t", formula="", value="Привет", opred_number="1"),
+                 "@t_2": StringField(symbol="@t", formula="", value="Привет", opred_number="2"),
+                 "@exp": StringField(symbol="@exp", formula="only(@t, \'Разногласие по параметрам\', \'Не разногласие\')", value="500",
+                                     opred_number="1")
+                 }
 
 import datetime
 
 print(datetime.datetime.now())
-
-a = FormulaManagerMySql(data_formula2, z).calc()
+opred = 2
+a = FormulaManagerMySql(data_formula2, session, opred).calc()
 print(a)
 print(datetime.datetime.now())
 
-print(datetime.datetime.now())
-a = FormulaManagerPython(data_new).calc()
-print(a)
-print(datetime.datetime.now())
-# FormulaManager(data_new).calc()
+data_new = {"@d": IntegerField(symbol="@d", formula="@a**@c"),
+            "@ab": IntegerField(symbol="@ab", formula="@d+@c"),
+            # "@e": IntegerField(symbol="@e", formula="round(@z, int(1))"),
+            "@e": IntegerField(symbol="@e", formula="round(@z, 1)"),
+            "@z": IntegerField(symbol="@z", formula="@a+@ab + 1"),
+            "@a": IntegerField(symbol="@a", formula="5.4"),
+            "@b": IntegerField(symbol="@b", formula="10"),
+            "@c": IntegerField(symbol="@c", formula="@a+@b")}  # "a+b", {"a":5.4, "b":10}
+
+# print(datetime.datetime.now())
+# a = FormulaManagerPython(data_new).calc()
+# print(a)
+# print(datetime.datetime.now())
