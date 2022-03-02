@@ -1,12 +1,19 @@
 import graphlib
+from abc import abstractmethod, ABC
 
 from sqlalchemy import text
 from FormulaCommit.parse import ParsePythonManager
-from FormulaCommit.parse_sql_v1 import ParseSqlManagerOld
 from FormulaCommit.parse_sql_v2 import ParseSqlManager
 
 
-class AbstractFormulaManager:
+class AbstractFormulaManager(ABC):
+    """
+    Абстрактный класс менеджера формул
+
+    Methods
+    -------
+    calc
+    """
 
     def __init__(self):
         self.__data = None
@@ -17,13 +24,19 @@ class AbstractFormulaManager:
         """
         Округление перед выводом пользователю, позволяет дополнить нулями значение
         Использует округление в большую сторону, применять для проставления нулей
-        :param number: not str object
+        :param number: объект для округления
         :param digit: количество знаков после запятой
         :return: значение с определенным количеством знаков после запятой
         """
         return f"{number:.{digit}f}"
 
     def calc(self):
+        """
+        Основной метод расчета результата,
+        вызывает последовательно методы подготовки параметров для графа,
+        расчет графа и вычисление результата
+        :return: словарь результатов {ключ1: значение1, ключ2: значение2}
+        """
         graph = self._collects_data_for_graph()
 
         calculated_graph = self._calculated_graph(graph)
@@ -34,14 +47,29 @@ class AbstractFormulaManager:
 
     @staticmethod
     def _calculated_graph(graph):
+        """
+        Расчет графа по заданным параметрам
+        :param graph: словарь зависимостей
+        :type graph: dict[str: set]
+        :return: кортеж последовательности элементов
+        """
         return tuple(graphlib.TopologicalSorter(graph).static_order())
 
-    @staticmethod
-    def _collects_data_for_graph():
-        return None
+    @abstractmethod
+    def _collects_data_for_graph(self):
+        """
+        Подгатавливает параметры для графа
+        :return: словарь зависимостей формата dict[str: set]
+        """
+        pass
 
-    @staticmethod
-    def _calc_result(calculated_graph):
+    @abstractmethod
+    def _calc_result(self, calculated_graph):
+        """
+        Вычисление результата
+        :param calculated_graph: кортеж элементов отсортированный в необходимой последовательности рассчета
+        :return:
+        """
         pass
 
 
@@ -58,6 +86,7 @@ class FormulaManagerMySql(AbstractFormulaManager):
         graph = {}
         for key, current_field in self.__data.items():
             current_field.formula = self.__parser_manager.update_formula(current_field)
+            current_field.dependence = self.__parser_manager.update_dependence(current_field)
             graph.update({key: current_field.dependence})
         return graph
 
@@ -72,7 +101,7 @@ class FormulaManagerMySql(AbstractFormulaManager):
             current_field = self.__data[field_symbol]
             calc_formula_list.append(
                 self.__parser_manager.parameter_for_calculating_the_result(
-                    field_symbol=current_field._symbol,
+                    field_symbol=f'{current_field._symbol}_{current_field._opred_number}',
                     formula_string=current_field.formula,
                     value=current_field._value)
             )

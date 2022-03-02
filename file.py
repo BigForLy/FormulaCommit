@@ -1,6 +1,7 @@
 from sqlalchemy import text, literal_column, literal
 from sqlalchemy.future import create_engine
 from sqlalchemy.orm import sessionmaker
+import sqlalchemy
 
 from FormulaCommit.fields import StringField, IntegerField
 from FormulaCommit.manage import FormulaManagerMySql, FormulaManagerPython
@@ -24,16 +25,16 @@ session = test_connection()
 # p = p.all()
 
 # Гост 18995.4-73
-data_formula2 = {"@t_1": IntegerField(symbol="@t_1", formula="", value="2", opred_number="1"),
-                 "@t1_1": IntegerField(symbol="@t1_1", formula="", value="1", opred_number="1"),
-                 "@h_1": IntegerField(symbol="@h_1", formula="", value="1", opred_number="1"),
-                 "@exp_1": IntegerField(symbol="@exp_1", formula="@t+0.00016*(@t-@t1)*@h", value="500",
+data_formula2 = {"@t_1": IntegerField(symbol="@t", formula="", value="2", opred_number="1"),
+                 "@t1_1": IntegerField(symbol="@t1", formula="", value="1", opred_number="1"),
+                 "@h_1": IntegerField(symbol="@h", formula="", value="1", opred_number="1"),
+                 "@exp_1": IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", value="500",
                                         opred_number="1"),
-                 "@t_2": IntegerField(symbol="@t_2", formula="", value="3", opred_number="2"),
-                 "@t1_2": IntegerField(symbol="@t1_2", formula="", value="1", opred_number="2"),
-                 "@h_2": IntegerField(symbol="@h_2", formula="", value="1", opred_number="2"),
-                 "@exp_2": IntegerField(symbol="@exp_2", formula="@t+0.00016*(@t-@t1)*@h", opred_number="2"),
-                 "@r1": IntegerField(symbol="@r1", formula="5+avg(@exp)")
+                 "@t_2": IntegerField(symbol="@t", formula="", value="3", opred_number="2"),
+                 "@t1_2": IntegerField(symbol="@t1", formula="", value="1", opred_number="2"),
+                 "@h_2": IntegerField(symbol="@h", formula="", value="1", opred_number="2"),
+                 "@exp_2": IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", opred_number="2"),
+                 "@r1_1": IntegerField(symbol="@r1", formula="@t_1+avg(@exp)")
                  }
 
 data_formula1 = {"@t_1": StringField(symbol="@t", formula="", value="Привет", opred_number="1"),
