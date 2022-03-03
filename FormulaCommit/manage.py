@@ -82,7 +82,17 @@ class FormulaManagerMySql(AbstractFormulaManager):
         self._result = {}
         self.__parser_manager = ParseSqlManager(assay_count)
 
-    def _collects_data_for_graph(self):
+    def __update_number_field_by_symbol(self):
+        data = {}
+        for _, current_field in self.__data.items():
+            if current_field._symbol in data:
+                data[current_field._symbol] += current_field._opred_number
+            else:
+                data.update({current_field._symbol: [current_field._opred_number]})
+        self.__parser_manager.number_field_by_symbol = data
+
+    def _collects_data_for_graph(self):  # todo разделить на несколько
+        self.__update_number_field_by_symbol()
         graph = {}
         for key, current_field in self.__data.items():
             current_field.formula = self.__parser_manager.update_formula(current_field)
@@ -100,10 +110,7 @@ class FormulaManagerMySql(AbstractFormulaManager):
         for field_symbol in calculated_graph:
             current_field = self.__data[field_symbol]
             calc_formula_list.append(
-                self.__parser_manager.parameter_for_calculating_the_result(
-                    field_symbol=f'{current_field._symbol}_{current_field._opred_number}',
-                    formula_string=current_field.formula,
-                    value=current_field._value)
+                self.__parser_manager.parameter_for_calculating_the_result(current_field=current_field)
             )
         calc_string = ' '.join(calc_formula_list)
         print(calc_string)

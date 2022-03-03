@@ -59,6 +59,5 @@ def shunting_yard(parsed_formula):
 # print(list(shunting_yard(parse('(1*3)+5*avg(@t_1+1)+5'))))
 
 # print(list(shunting_yard(parse('(1*3)+5*avg((@t_1+1)*5)+5'))))
-print(list(shunting_yard(parse('avg(5, "Ghbd tn")'))))
+# print(list(shunting_yard(parse('avg(5, "Ghbd tn")'))))
 # print(list(shunting_yard(parse('avg(@t)+5'))))
-

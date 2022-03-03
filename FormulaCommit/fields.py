@@ -40,12 +40,13 @@ class AbstractField:
 
 class IntegerField(AbstractField):
 
-    def __init__(self, *, symbol, formula, value=None, opred_number=1):
+    def __init__(self, *, symbol, formula, value=None, opred_number=1, value_only=False):
         super().__init__()
         self._symbol = symbol
         self._formula = formula
         self._value = value
         self._opred_number = opred_number
+        self._value_only = value_only
 
     def calc(self):
         self._value = float(eval(str(self._value)))  # Расчет, округление

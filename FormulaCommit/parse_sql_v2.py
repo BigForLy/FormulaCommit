@@ -1,13 +1,19 @@
-from FormulaCommit.formula_mysql import FormulaAvg, FormulaOnly
+from FormulaCommit.formula_mysql import FormulaOnly, StandardFormula
 
 
 class ParseSqlManager:
 
     def __init__(self, assay_count):
         self.__OPERATORS = {'+', '-', '*', '/'}
-        self.__assay_count = tuple(f'{name + 1}' for name in range(assay_count))
+        self.__assay_count1 = tuple(f'{name + 1}' for name in range(assay_count))  # todo нужно отказаться
+        self.number_field_by_symbol = {}
         self.isFormula = None
-        self.__func = {'avg': FormulaAvg(), 'only': FormulaOnly()}
+        self.__func = {'avg': StandardFormula(),  # todo не создавать экземпляр класса каждый раз
+                       'only': FormulaOnly(),
+                       'max': StandardFormula(),
+                       'min': StandardFormula(),
+                       'sum': StandardFormula(),
+                       'count': StandardFormula()}
 
     def update_formula(self, current_field):
         """
@@ -128,11 +134,12 @@ class ParseSqlManager:
                 current_func = self.__func[x]
                 for i in range(current_func.count_param):
                     param.append(stack.pop())
-                func_result = current_func.get_transformation(*param, assay_count=self.__assay_count)
+                func_result = current_func.get_transformation(*param, assay_number=self.number_field_by_symbol[param[0]],
+                                                              formula_name=x)
                 yield func_result
             else:
                 if '@' in x:
-                    if '_' in x and x.split('_')[-1] in self.__assay_count:
+                    if '_' in x and x not in self.number_field_by_symbol:
                         now_x = x
                     else:
                         now_x = f'{x}_{definition_number}'
@@ -141,6 +148,7 @@ class ParseSqlManager:
                     yield x
 
     @staticmethod
-    def parameter_for_calculating_the_result(*, field_symbol, formula_string, value):
-        term = formula_string if formula_string else f"\"{str(value)}\""
-        return f'set {field_symbol}:={term};'
+    def parameter_for_calculating_the_result(*, current_field):
+        term = current_field.formula if current_field.formula and not current_field._value_only else \
+            f"\"{str(current_field._value)}\""
+        return f'set {current_field._symbol}_{current_field._opred_number}:={term};'
