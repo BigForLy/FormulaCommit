@@ -1,4 +1,7 @@
-class AbstractField:
+from abc import ABC, abstractmethod
+
+
+class AbstractField(ABC):
     def __init__(self):
         self._symbol = None
         self._formula = None
@@ -37,6 +40,10 @@ class AbstractField:
         """
         self._formula = value
 
+    @abstractmethod
+    def calc(self):
+        pass
+
 
 class IntegerField(AbstractField):
 
@@ -66,10 +73,15 @@ class StringField(AbstractField):
         return self._value
 
 
-class FloatField(AbstractField):
+class BoolField(AbstractField):
 
-    def __init__(self, *, symbol, formula):
+    def __init__(self, *, symbol, formula=None, value, opred_number=1):
         super().__init__()
         self._symbol = symbol
-        self._type = float
         self._formula = formula
+        self._value = value
+        self._opred_number = opred_number
+
+    def calc(self):
+        pass
+

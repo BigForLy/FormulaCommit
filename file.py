@@ -26,6 +26,7 @@ session = test_connection()
 data_formula2 = {"@t_1": IntegerField(symbol="@t", formula="", value="2", opred_number="1"),
                  "@t1_1": IntegerField(symbol="@t1", formula="", value="1", opred_number="1"),
                  "@h_1": IntegerField(symbol="@h", formula="", value="1", opred_number="1"),
+
                  "@exp_1": IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", value="500",
                                         opred_number="1", value_only=True),
                  "@t_3": IntegerField(symbol="@t", formula="", value="3", opred_number="3"),
