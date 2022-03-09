@@ -3,10 +3,9 @@ from FormulaCommit.formula_mysql import FormulaOnly, StandardFormula
 
 class ParseSqlManager:
 
-    def __init__(self, assay_count):
+    def __init__(self):
         self.__OPERATORS = {'+', '-', '*', '/'}
-        self.__assay_count1 = tuple(f'{name + 1}' for name in range(assay_count))  # todo нужно отказаться
-        self.number_field_by_symbol = {}
+        # self.number_field_by_symbol = {}
         self.isFormula = None
         self.__func = {'avg': StandardFormula(),  # todo не создавать экземпляр класса каждый раз
                        'only': FormulaOnly(),
@@ -15,28 +14,25 @@ class ParseSqlManager:
                        'sum': StandardFormula(),
                        'count': StandardFormula()}
 
-    def update_formula(self, current_field):
+    def update_formula(self, current_field, number_field_by_symbol):
         """
         Изменяет формулу для расчета
         :param current_field: рассчитываемое поле
         :type current_field: AbstractField
         :return: формула
         """
-        if current_field.formula:
-            all_param_generator = self.__parse(current_field.formula)
-            formula_list = self.shunting_yard(all_param_generator, current_field._opred_number)
-            return ''.join(list(formula_list))
-        else:
-            return ''
+        all_param_generator = self.__parse(current_field.formula)
+        formula_list = self.shunting_yard(all_param_generator, current_field._definition_number, number_field_by_symbol)
+        return ''.join(list(formula_list))
 
-    def update_dependence(self, current_field):
+    def update_dependence(self, formula):
         """
         Рассчитывает список зависимостей у формулы
         :param current_field: рассчитываемое поле
         :type current_field: AbstractField
         :return: множество зависимостей у формулы поля
         """
-        return set(x for x in self.__parse(current_field.formula) if '@' in x)
+        return set(x for x in self.__parse(formula) if '@' in x)
 
     def __parse(self, formula_string):
         """
@@ -57,7 +53,7 @@ class ParseSqlManager:
         if param:
             yield param
 
-    def shunting_yard(self, parsed_formula, definition_number):
+    def shunting_yard(self, parsed_formula, definition_number, number_field_by_symbol):
         """
         Сортировочный станция, задача сортировочной станции обработать список элементов изначальной формулы,
         превратить его в новый список удобочитаемых и используемых для функций элементов,
@@ -69,7 +65,7 @@ class ParseSqlManager:
         :return: последовательный список параметров формулы для расчета в виде генератора
         """
         stack = self.__separation_into_all_param(parsed_formula)
-        return self.__update_func_param(stack, definition_number)
+        return self.__update_func_param(stack, definition_number, number_field_by_symbol)
 
     def __separation_into_all_param(self, parsed_formula):
         """
@@ -117,7 +113,7 @@ class ParseSqlManager:
                 stack.append(token)
         return stack[::-1]
 
-    def __update_func_param(self, stack, definition_number):
+    def __update_func_param(self, stack, definition_number, number_field_by_symbol):
         """
         Добавляет номер определения для символьных обозначений полей в формуле,
         преобразовывает функции в формулы для вычислений в MySQL
@@ -134,12 +130,12 @@ class ParseSqlManager:
                 current_func = self.__func[x]
                 for i in range(current_func.count_param):
                     param.append(stack.pop())
-                func_result = current_func.get_transformation(*param, assay_number=self.number_field_by_symbol[param[0]],
+                func_result = current_func.get_transformation(*param, assay_number=number_field_by_symbol[param[0]],
                                                               formula_name=x)
                 yield func_result
             else:
                 if '@' in x:
-                    if '_' in x and x not in self.number_field_by_symbol:
+                    if '_' in x and x not in number_field_by_symbol:
                         now_x = x
                     else:
                         now_x = f'{x}_{definition_number}'
@@ -151,4 +147,4 @@ class ParseSqlManager:
     def parameter_for_calculating_the_result(*, current_field):
         term = current_field.formula if current_field.formula and not current_field._value_only else \
             f"\"{str(current_field._value)}\""
-        return f'set {current_field._symbol}_{current_field._opred_number}:={term};'
+        return f'set {current_field.symbol_item.symbol_and_definition}:={term};'

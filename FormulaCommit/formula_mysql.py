@@ -35,3 +35,26 @@ class FormulaOnly(AbstractFormula):
                ' union '.join([f'select distinct {args[0]}_{assay_number} as result'
                                for assay_number in kwargs['assay_count']]) \
                + ') as t)'
+
+
+class Formula:  # todo переделать в dataclass перенести в fields
+
+    def __init__(self, formula):
+        self.__formula = formula
+        self.__dependence = set()
+
+    @property
+    def formula(self):
+        return self.__formula
+
+    @formula.setter
+    def formula(self, value):
+        self.__formula = value
+
+    @property
+    def dependence(self):
+        return self.__dependence
+
+    @dependence.setter
+    def dependence(self, value):
+        self.__dependence = value

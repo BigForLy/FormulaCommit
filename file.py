@@ -23,31 +23,33 @@ session = test_connection()
 # p = p.all()
 
 
-data_formula2 = {"@t_1": IntegerField(symbol="@t", formula="", value="2", opred_number="1"),
-                 "@t1_1": IntegerField(symbol="@t1", formula="", value="1", opred_number="1"),
-                 "@h_1": IntegerField(symbol="@h", formula="", value="1", opred_number="1"),
-                 "@ignore_1": BoolField(symbol="@ignore", value="False", opred_number="1"),
-                 "@manual_1": BoolField(symbol="@manual", value="False", opred_number="1"),
-                 "@exp_1": IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", value="500",
-                                        opred_number="1", value_only=False),
-                 "@t_3": IntegerField(symbol="@t", formula="", value="3", opred_number="3"),
-                 "@t1_3": IntegerField(symbol="@t1", formula="", value="1", opred_number="3"),
-                 "@h_3": IntegerField(symbol="@h", formula="", value="1", opred_number="3"),
-                 "@exp_3": IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", opred_number="3"),
-                 "@r1_1": IntegerField(symbol="@r1", formula="/*смисмисм*/REPLACE((case when avg(@exp)=1 then '1,00' when avg(@exp)=2 then '2,00' when avg(@exp)=3 then '3,00' when avg(@exp)=4 then '4,00' when avg(@exp)=5 then '5,0' else avg(@exp) end),',','.')")
-                 }
-
-
-data_formula1 = {"@t_1": StringField(symbol="@t", formula="", value="Привет", opred_number="1"),
-                 "@t_2": StringField(symbol="@t", formula="", value="Привет", opred_number="2"),
-                 "@exp_1": StringField(symbol="@exp", formula='only(@t, "Разногласие по параметрам")', value="500",
-                                       opred_number="1")
-                 }
+data = [IntegerField(symbol="", formula="", value="2", definition_number="0"),  # все не блокируемые поля имеют номер определения 0
+        IntegerField(symbol="", formula="1+2", value="200", definition_number="0"),
+        IntegerField(symbol="@t", formula="", value="2", definition_number="1"),
+        IntegerField(symbol="@t1", formula="", value="1", definition_number="1"),
+        IntegerField(symbol="@h", formula="", value="1", definition_number="1"),
+        BoolField(symbol="@check_ignore", value="False", definition_number="1"),
+        BoolField(symbol="@input_manual", value="False", definition_number="1"),
+        IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", value="500"),
+        IntegerField(symbol="@t", formula="", value="3", definition_number="3"),
+        IntegerField(symbol="@t1", formula="", value="1", definition_number="3"),
+        IntegerField(symbol="@h", formula="", value="1", definition_number="3"),
+        IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", definition_number="3"),
+        IntegerField(symbol="@r1",
+                     formula="/*смисмисм*/REPLACE((case when avg(@exp)=1 then '1,00' when avg(@exp)=2 then '2,00' when avg(@exp)=3 then '3,00' when avg(@exp)=4 then '4,00' when avg(@exp)=5 then '5,0' else avg(@exp) end),',','.')")
+        ]
 
 import datetime
-
-print(datetime.datetime.now())
-opred = 2
-a = FormulaManagerMySql(data_formula2, session, opred).calc()
+# print(datetime.datetime.now())
+foo = datetime.datetime.now()
+a = FormulaManagerMySql(data, session).calc()
+bar = datetime.datetime.now()
+# print(datetime.datetime.now(), '\n')
 print(a)
-print(datetime.datetime.now())
+print('Функция целиком: ', bar-foo)
+
+# data_formula1 = {"@t_1": StringField(symbol="@t", formula="", value="Привет", opred_number="1"),
+#                  "@t_2": StringField(symbol="@t", formula="", value="Привет", opred_number="2"),
+#                  "@exp_1": StringField(symbol="@exp", formula='only(@t, "Разногласие по параметрам")', value="500",
+#                                        opred_number="1")
+#                  }

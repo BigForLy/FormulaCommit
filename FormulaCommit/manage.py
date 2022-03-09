@@ -1,8 +1,8 @@
+import datetime
 import graphlib
 from abc import abstractmethod, ABC
-
 from sqlalchemy import text
-from FormulaCommit.parse_sql import ParseSqlManager
+from FormulaCommit.definition_manager import DefinitionManager
 
 
 class AbstractFormulaManager(ABC):
@@ -36,6 +36,8 @@ class AbstractFormulaManager(ABC):
         расчет графа и вычисление результата
         :return: словарь результатов {ключ1: значение1, ключ2: значение2}
         """
+        self._prepare_data_for_calculation()
+
         graph = self._collects_data_for_graph()
 
         calculated_graph = self._calculated_graph(graph)
@@ -43,6 +45,10 @@ class AbstractFormulaManager(ABC):
         self._calc_result(calculated_graph)
 
         return self._result
+
+    @abstractmethod
+    def _prepare_data_for_calculation(self):
+        pass
 
     @staticmethod
     def _calculated_graph(graph):
@@ -74,54 +80,47 @@ class AbstractFormulaManager(ABC):
 
 class FormulaManagerMySql(AbstractFormulaManager):
 
-    def __init__(self, data, session, assay_count=1):
+    def __init__(self, data, session):
         super().__init__()
         self.__data = data
         self.__session = session
         self._result = {}
-        self.__parser_manager = ParseSqlManager(assay_count)
+        self.__definition_manager = DefinitionManager()
 
-    def __update_number_field_by_symbol(self):
-        data = {}
-        for _, current_field in self.__data.items():
-            if current_field._symbol in data:
-                data[current_field._symbol] += current_field._opred_number
-            else:
-                data.update({current_field._symbol: [current_field._opred_number]})
-        self.__parser_manager.number_field_by_symbol = data
+    def _prepare_data_for_calculation(self):
+        for current_field in self.__data:
+            self.__definition_manager.add(current_field)
+        self.__definition_manager.update_data_for_calculating()
 
-    def _collects_data_for_graph(self):  # todo разделить на несколько
-        self.__update_number_field_by_symbol()
-        graph = {}
-        for key, current_field in self.__data.items():
-            current_field.formula = self.__parser_manager.update_formula(current_field)
-            current_field.dependence = self.__parser_manager.update_dependence(current_field)
-            graph.update({key: current_field.dependence})
-        return graph
+    def _collects_data_for_graph(self):
+        return self.__definition_manager.all_field_dependencies_from_formula_symbol
 
     def _calc_result(self, calculated_graph):
-        calc_string = self.__preparation_of_data_for_calculation(calculated_graph)
-        dataset_result: dict = self.__data_processing(session=self.__session, calc_string=calc_string)
+        calc_string, select_string = self._collects_the_correct_sequence_of_formulas(calculated_graph)
+        dataset_result: dict = self.__data_processing(session=self.__session, calc_string=calc_string,
+                                                      select_string=select_string)
         self.__processing_of_calculation_results(dataset_result)
 
-    def __preparation_of_data_for_calculation(self, calculated_graph):
-        calc_formula_list = []
-        for field_symbol in calculated_graph:
-            current_field = self.__data[field_symbol]
-            calc_formula_list.append(
-                self.__parser_manager.parameter_for_calculating_the_result(current_field=current_field)
-            )
-        calc_string = ' '.join(calc_formula_list)
+    def _collects_the_correct_sequence_of_formulas(self, calculated_graph):
+        symbol_and_formula = dict(map(lambda x: (x, self.__definition_manager.get_formula_by_symbol(x)),
+                                      calculated_graph))
+        calc_string = ' '.join(symbol_and_formula.values())
+        select_string = ', '.join(symbol_and_formula.keys())
         print(calc_string)
-        return calc_string
+        return calc_string, select_string
 
-    def __data_processing(self, session, calc_string):
+    @staticmethod
+    def __data_processing(*, session, calc_string, select_string):
+        foo = datetime.datetime.now()
         session.execute(text(calc_string))
-        dataset = session.execute(text('select ' + ', '.join(self.__data.keys()))).all()
+        dataset = session.execute(text('select ' + select_string)).all()
+        bar = datetime.datetime.now()
+        print('Запрос к базе:   ', bar-foo)
         return dataset[0]._mapping
 
     def __processing_of_calculation_results(self, dataset_result):
-        for key, field_class in self.__data.items():
-            field_class._value = dataset_result.get(key)
-            field_class.calc()
-            self._result.update({key: field_class._value})
+        for symbol, value in dataset_result.items():
+            current_field = self.__definition_manager.get_field_by_symbol(symbol)
+            current_field.value = value
+            current_field.calc()
+            self._result.update({symbol: current_field.value})
