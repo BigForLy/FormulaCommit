@@ -19,7 +19,7 @@ class AbstractFormulaManager(ABC):
         self._result = {}
 
     @staticmethod
-    def __to_fixed_range(number, digit=0):  # todo: Переименовать
+    def __to_fixed_range(number, digit=0):
         """
         Округление перед выводом пользователю, позволяет дополнить нулями значение
         Использует округление в большую сторону, применять для проставления нулей
@@ -122,5 +122,5 @@ class FormulaManagerMySql(AbstractFormulaManager):
         for symbol, value in dataset_result.items():
             current_field = self.__definition_manager.get_field_by_symbol(symbol)
             current_field.value = value
-            current_field.calc()
-            self._result.update({symbol: current_field.value})
+            current_field.calc()  # не попадают не расчетные поля
+            self._result.update({symbol: current_field.value})  # не попадают не расчетные поля

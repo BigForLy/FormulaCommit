@@ -5,7 +5,6 @@ class ParseSqlManager:
 
     def __init__(self):
         self.__OPERATORS = {'+', '-', '*', '/'}
-        # self.number_field_by_symbol = {}
         self.isFormula = None
         self.__func = {'avg': StandardFormula(),  # todo не создавать экземпляр класса каждый раз
                        'only': FormulaOnly(),
@@ -130,7 +129,7 @@ class ParseSqlManager:
                 current_func = self.__func[x]
                 for i in range(current_func.count_param):
                     param.append(stack.pop())
-                func_result = current_func.get_transformation(*param, assay_number=number_field_by_symbol[param[0]],
+                func_result = current_func.get_transformation(*param, assay_number=number_field_by_symbol.get(param[0]),
                                                               formula_name=x)
                 yield func_result
             else:

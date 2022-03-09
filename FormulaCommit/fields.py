@@ -71,18 +71,22 @@ class AbstractField(ABC):
     def calc(self):
         pass
 
+    def create_symbol(self, symbol):
+        self._symbol = SymbolItem(symbol, f'{symbol}_{self._definition_number}', True)
+
 
 class IntegerField(AbstractField):
 
-    def __init__(self, *, symbol, formula, value=None, definition_number=1):
+    def __init__(self, *, symbol, formula, value=None, definition_number=0):
         super().__init__()
-        self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}')
+        if symbol:
+            self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}')
         self._formula = FormulaItem(formula, set())
         self._value = value
         self._definition_number = definition_number
 
     def calc(self):
-        self._value = float(eval(str(self._value)))  # Расчет, округление
+        self._value = float(eval(str(self._value))) if self._value else ''  # Расчет, округление
         return self._value
 
 
@@ -105,7 +109,7 @@ class BoolField(AbstractField):
         super().__init__()
         self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}')
         self._formula = FormulaItem(formula, set())
-        self._value = True if value == 'True' else False  # todo возможно лучше передавать 0/1
+        self._value = True if value == 'True' else False
         self._definition_number = definition_number
 
     def calc(self):

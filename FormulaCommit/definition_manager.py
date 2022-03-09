@@ -25,7 +25,7 @@ class DefinitionManager:
 
     @property
     def all_field_dependencies_from_formula_symbol(self):
-        return dict(map(lambda x: (x[0], x[1].dependence), self.__symbols_and_field.items()))
+        return dict(map(lambda field: (field[0], field[1].dependence), self.__symbols_and_field.items()))
 
     def get_formula_by_symbol(self, symbol):
         return self.__parser_manager.parameter_for_calculating_the_result(current_field=
@@ -45,15 +45,16 @@ class DefinitionManager:
 
     def update_data_for_calculating(self):
         for definition_number, definition in self.__definition_and_field.items():
-            for symbol, current_field in definition.field.items():
+            for symbol in definition.all_definitions_symbols:
+                current_field = definition.field[symbol]
                 if current_field.formula:
                     current_field.formula = self.__parser_manager.update_formula(
                         current_field,
                         self.symbols_and_definition_numbers)
-                    current_field.dependence = self.__parser_manager.update_dependence(current_field.formula)
-            self.__symbols_and_field.update(dict(map(lambda items: (items[1].symbol_item.symbol_and_definition,
-                                                                    items[1]),
-                                                     definition.field.items())))
+                    current_field.dependence = set() if current_field._value_only else \
+                        self.__parser_manager.update_dependence(current_field.formula)
+
+                self.__symbols_and_field.update({current_field.symbol_item.symbol_and_definition: current_field})
 
 
 class Definition:
@@ -82,10 +83,12 @@ class Definition:
     def add_field(self, current_field):
         if self.__input_manual:
             current_field._value_only = True
-        if not current_field.symbol_item.symbol:  # Если нет symbol создаем symbol_and_definition чтобы расчитать value
+        if not current_field.symbol_item:  # Если у current_field не заполнен символ, создаем symbol_item
             self.create_field_symbol(current_field)
         if not self.__check_ignore:
             self.__all_definitions_symbols.add(current_field.symbol_item.symbol)
+        if self.__check_ignore:
+            current_field._value_only = True
 
         if 'check_ignore' in current_field.symbol_item.symbol and current_field.value:
             self.__check_ignore = True
@@ -97,6 +100,4 @@ class Definition:
         self.__field.update({current_field.symbol_item.symbol: current_field})
 
     def create_field_symbol(self, current_field):
-        current_field.symbol_item.symbol = f'@{len(self.__field)}'
-        current_field.symbol_item.symbol_and_definition = f'@{len(self.__field)}_{current_field.definition_number}'
-        current_field.symbol_item.overridden = True
+        current_field.create_symbol(f'@{len(self.__field)}')

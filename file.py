@@ -23,30 +23,33 @@ session = test_connection()
 # p = p.all()
 
 
-data = [IntegerField(symbol="", formula="", value="2", definition_number="0"),  # все не блокируемые поля имеют номер определения 0
-        IntegerField(symbol="", formula="1+2", value="200", definition_number="0"),
+data = [IntegerField(symbol="", formula="", value="2"),  # все не блокируемые поля имеют номер определения 0
+        IntegerField(symbol="", formula="1+2", value="200"),
         IntegerField(symbol="@t", formula="", value="2", definition_number="1"),
         IntegerField(symbol="@t1", formula="", value="1", definition_number="1"),
         IntegerField(symbol="@h", formula="", value="1", definition_number="1"),
-        BoolField(symbol="@check_ignore", value="False", definition_number="1"),
+        BoolField(symbol="@check_ignore", value="True", definition_number="1"),
         BoolField(symbol="@input_manual", value="False", definition_number="1"),
-        IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", value="500"),
+        IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", value="500", definition_number="1"),
         IntegerField(symbol="@t", formula="", value="3", definition_number="3"),
         IntegerField(symbol="@t1", formula="", value="1", definition_number="3"),
         IntegerField(symbol="@h", formula="", value="1", definition_number="3"),
-        IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", definition_number="3"),
+        BoolField(symbol="@check_ignore", value="False", definition_number="3"),
+        BoolField(symbol="@input_manual", value="True", definition_number="3"),
+        IntegerField(symbol="@exp", formula="@t+0.00016*(@t-@t1)*@h", value="50", definition_number="3"),
         IntegerField(symbol="@r1",
-                     formula="/*смисмисм*/REPLACE((case when avg(@exp)=1 then '1,00' when avg(@exp)=2 then '2,00' when avg(@exp)=3 then '3,00' when avg(@exp)=4 then '4,00' when avg(@exp)=5 then '5,0' else avg(@exp) end),',','.')")
+                     formula="/*смисмисм*/REPLACE((case when avg(@exp)=1 then '1,00' when avg(@exp)=2 then '2,00' when avg(@exp)=3 then '3,00' when avg(@exp)=4 then '4,00' when avg(@exp)=5 then '5,0' else avg(@exp) end),',','.')"),
+        IntegerField(symbol="@r2",
+                     formula="avg(@exp)+1")
         ]
 
 import datetime
-# print(datetime.datetime.now())
+
 foo = datetime.datetime.now()
 a = FormulaManagerMySql(data, session).calc()
 bar = datetime.datetime.now()
-# print(datetime.datetime.now(), '\n')
 print(a)
-print('Функция целиком: ', bar-foo)
+print('Функция целиком: ', bar - foo)
 
 # data_formula1 = {"@t_1": StringField(symbol="@t", formula="", value="Привет", opred_number="1"),
 #                  "@t_2": StringField(symbol="@t", formula="", value="Привет", opred_number="2"),

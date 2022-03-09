@@ -19,9 +19,12 @@ class StandardFormula(AbstractFormula):
     """
 
     def get_transformation(self, args, *, assay_number, formula_name):
-        return f'(select {formula_name}(t.result) from(' + \
-               ' union '.join([f'select {args}_{assay_number} as result' for assay_number in assay_number])\
-               + ') as t)'
+        if assay_number:  # todo вероятно выделить в интерфейс проверку на assay_number
+            return f'(select {formula_name}(t.result) from(' + \
+                   ' union '.join([f'select {args}_{assay_number} as result' for assay_number in assay_number])\
+                   + ') as t)'
+        else:
+            return "(null)"
 
 
 class FormulaOnly(AbstractFormula):
@@ -31,30 +34,8 @@ class FormulaOnly(AbstractFormula):
         self.delimiter = ','
 
     def get_transformation(self, *args, **kwargs):
-        return f'(select if(count(t.result)>1, {f"{args[2]}, {args[1]}" if len(args) == 3 else f"{args[1]}, t.result"}) from(' + \
+        return '(select if(count(t.result)>1, ' \
+               f'{f"{args[2]}, {args[1]}" if len(args) == 3 else f"{args[1]}, t.result"}) from(' + \
                ' union '.join([f'select distinct {args[0]}_{assay_number} as result'
-                               for assay_number in kwargs['assay_count']]) \
+                               for assay_number in kwargs['assay_number']]) \
                + ') as t)'
-
-
-class Formula:  # todo переделать в dataclass перенести в fields
-
-    def __init__(self, formula):
-        self.__formula = formula
-        self.__dependence = set()
-
-    @property
-    def formula(self):
-        return self.__formula
-
-    @formula.setter
-    def formula(self, value):
-        self.__formula = value
-
-    @property
-    def dependence(self):
-        return self.__dependence
-
-    @dependence.setter
-    def dependence(self, value):
-        self.__dependence = value
