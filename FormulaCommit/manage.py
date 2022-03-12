@@ -3,6 +3,7 @@ import graphlib
 from abc import abstractmethod, ABC
 from sqlalchemy import text
 from FormulaCommit.definition_manager import DefinitionManager
+from FormulaCommit.session_manager import MySQLFactory, ParserCalculationItemToExecuteStringMySQL, ParserMySQLFactory
 
 
 class AbstractFormulaManager(ABC):
@@ -78,10 +79,9 @@ class AbstractFormulaManager(ABC):
 
 class FormulaManagerMySql(AbstractFormulaManager):
 
-    def __init__(self, data, session):
+    def __init__(self, data):
         super().__init__()
         self.__data = data
-        self.__session = session
         self.__definition_manager = DefinitionManager()
 
     def _prepare_data_for_calculation(self):
@@ -93,28 +93,17 @@ class FormulaManagerMySql(AbstractFormulaManager):
         return self.__definition_manager.all_field_dependencies_from_formula_symbol
 
     def _calc_result(self, calculated_graph):
-        calc_string, select_string = self._collects_the_correct_sequence_of_formulas(calculated_graph)
-        dataset_result: dict = self.__data_processing(session=self.__session, calc_string=calc_string,
-                                                      select_string=select_string)
+        symbol_and_calculate_item_list = self._collects_the_correct_sequence_of_formulas(calculated_graph)
+        parser = ParserMySQLFactory().parser()
+        calc_string, select_string = parser.parse(symbol_and_calculate_item_list)
+        calculator = MySQLFactory().calculator()
+        dataset_result = calculator.calculation(calc_string, select_string)
         return self.__processing_of_calculation_results(dataset_result)
 
     def _collects_the_correct_sequence_of_formulas(self, calculated_graph):
-        symbol_and_formula = dict(map(lambda x: (x, self.__definition_manager.get_formula_by_symbol(x)),
-                                      calculated_graph))
-        calc_string = ' '.join(symbol_and_formula.values())
-        select_string = ', '.join(symbol_and_formula.keys())
-        print(calc_string, ' select ', select_string)
-        return calc_string, select_string
-
-    @staticmethod
-    def __data_processing(*, session, calc_string, select_string):
-        foo = datetime.datetime.now()
-        session.execute(text(calc_string))
-        dataset = session.execute(text('select ' + select_string)).all()
-        bar = datetime.datetime.now()
-        print('Запрос к базе:   ', bar-foo)
-        print(dataset[0]._mapping)
-        return dataset[0]._mapping
+        symbol_and_calculate_item_list = dict(map(lambda x: (x, self.__definition_manager.get_formula_by_symbol(x)),
+                                                  calculated_graph))
+        return symbol_and_calculate_item_list
 
     def __processing_of_calculation_results(self, dataset_result):  # временное решение
         return self.__definition_manager.update_value_for_data(dataset_result)

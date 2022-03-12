@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from FormulaCommit.formula_mysql import FormulaOnly, StandardFormula
 
 
@@ -146,4 +148,17 @@ class ParseSqlManager:
     def parameter_for_calculating_the_result(*, current_field):
         term = current_field.formula if current_field.formula and not current_field._value_only else \
             f"\"{str(current_field._value)}\""
-        return f'set {current_field.symbol_item.symbol_and_definition}:={term};'
+        return CalculateItem(current_field.symbol_item.symbol_and_definition,
+                             current_field.formula is not None and current_field.formula != '' and
+                             not current_field._value_only,
+                             f'set {current_field.symbol_item.symbol_and_definition}:={term};',
+                             f'({current_field.symbol_item.symbol_and_definition}, {term})',
+                             )
+
+
+@dataclass
+class CalculateItem:
+    symbol_and_definition: str
+    is_formula: bool  # Если True то формула, если False то value
+    formula_old: str  # Формула для mysql
+    formula: str  # переименовать

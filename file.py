@@ -5,20 +5,20 @@ from FormulaCommit.fields import StringField, IntegerField, BoolField
 from FormulaCommit.manage import FormulaManagerMySql
 
 
-def test_connection():
-    db = "mysql://root:3kmzghj3z@localhost:3306/lims?charset=utf8"
-    engine = create_engine(
-        db,
-        pool_recycle=3600,
-        connect_args={
-            'connect_timeout': 1
-        }
-    )
-    session = sessionmaker(bind=engine)
-    return session()
-
-
-session = test_connection()
+# def test_connection():
+#     db = "mysql://root:3kmzghj3z@localhost:3306/lims?charset=utf8"
+#     engine = create_engine(
+#         db,
+#         pool_recycle=3600,
+#         connect_args={
+#             'connect_timeout': 1
+#         }
+#     )
+#     session = sessionmaker(bind=engine)
+#     return session()
+#
+#
+# session = test_connection()
 # p = z.execute(text("select @z := 1 + 2 as z"))
 # p = p.all()
 
@@ -46,7 +46,7 @@ data = [IntegerField(symbol="", formula="", value="2"),  # все не блок�
 import datetime
 
 foo = datetime.datetime.now()
-a = FormulaManagerMySql(data, session).calc()
+a = FormulaManagerMySql(data).calc()
 bar = datetime.datetime.now()
 print(dict(map(lambda x: (x.symbol_item.symbol_and_definition, x.value), a)))
 print('Функция целиком: ', bar - foo)

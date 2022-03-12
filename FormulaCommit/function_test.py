@@ -1,6 +1,7 @@
 import datetime
 from unittest import TestCase
 
+from memory_profiler import memory_usage
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -31,7 +32,7 @@ class CheckResultTest(TestCase):
                 IntegerField(symbol="@b", formula="", value="6", primary_key=2),
                 IntegerField(symbol="@c", formula="@a+@b", value="2", primary_key=3)]
         foo = datetime.datetime.now()
-        result = FormulaManagerMySql(data, session).calc()
+        result = FormulaManagerMySql(data).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
         assert result == {2: 6.0, 1: 2.0, 3: 8.0}, "Неверное решение simple_sum"
@@ -55,8 +56,9 @@ class CheckResultTest(TestCase):
 
                 StringField(symbol="@r", formula="avg(@exp)", value="", primary_key="14")]
         foo = datetime.datetime.now()
-        result = FormulaManagerMySql(data, session).calc()
+        result = FormulaManagerMySql(data).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        assert result == {'2': 'Да', '1': '2', '14': 100.0, '13': 100.0, '12': 100.0, '10': 'False', '11': 'False', '9': 1.0, '8': 1.0}, \
-            "Неверное решение Гост 2477-2014"
+        print(memory_usage())
+        assert result == {'2': 'Да', '1': '2', '14': 100.0, '13': 100.0, '12': 100.0, '10': 'False', '11': 'False',
+                          '9': 1.0, '8': 1.0}, "Неверное решение Гост 2477-2014"
