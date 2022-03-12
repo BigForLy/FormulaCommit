@@ -34,8 +34,11 @@ class FormulaOnly(AbstractFormula):
         self.delimiter = ','
 
     def get_transformation(self, *args, **kwargs):
-        return '(select if(count(t.result)>1, ' \
-               f'{f"{args[2]}, {args[1]}" if len(args) == 3 else f"{args[1]}, t.result"}) from(' + \
-               ' union '.join([f'select distinct {args[0]}_{assay_number} as result'
-                               for assay_number in kwargs['assay_number']]) \
-               + ') as t)'
+        if kwargs['assay_number']:
+            return '(select if(count(t.result)>1, ' \
+                   f'{f"{args[2]}, {args[1]}" if len(args) == 3 else f"{args[1]}, t.result"}) from(' + \
+                   ' union '.join([f'select distinct {args[0]}_{assay_number} as result'
+                                   for assay_number in kwargs['assay_number']]) \
+                   + ') as t)'
+        else:
+            return "(null)"

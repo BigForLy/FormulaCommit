@@ -1,3 +1,6 @@
+from collections import defaultdict
+from typing import Any
+
 from FormulaCommit.parse_sql import ParseSqlManager
 
 
@@ -5,22 +8,18 @@ class DefinitionManager:
 
     def __init__(self):
         self.__parser_manager = ParseSqlManager()
-        self.__definition_and_field = {}  # словарь определений и полей
-        self.__symbols_and_definition_numbers_by_lazy = None
-        self.__symbols_and_field = {}  # todo переделать в dataclass
+        self.__definition_and_field: dict[int, Definition] = defaultdict(Definition)  # словарь определений и полей
+        self.__symbols_and_definition_numbers_by_lazy: dict[int, list] = defaultdict(list)
+        self.__symbols_and_field = {}
 
     @property
     def symbols_and_definition_numbers(self):
-        if self.__symbols_and_definition_numbers_by_lazy is None:
-            self.__symbols_and_definition_numbers_by_lazy = {}
-            for number_definition, definition in self.__definition_and_field.items():
-                for symbol in definition.all_definitions_symbols:
-                    if symbol in self.__symbols_and_definition_numbers_by_lazy:
-                        self.__symbols_and_definition_numbers_by_lazy.get(symbol).append(number_definition)
-                    else:
-                        self.__symbols_and_definition_numbers_by_lazy.update({symbol: [number_definition]})
+        if self.__symbols_and_definition_numbers_by_lazy:
             return self.__symbols_and_definition_numbers_by_lazy
         else:
+            for number_definition, definition in self.__definition_and_field.items():
+                for symbol in definition.all_definitions_symbols:
+                    self.__symbols_and_definition_numbers_by_lazy[symbol].append(number_definition)
             return self.__symbols_and_definition_numbers_by_lazy
 
     @property
@@ -35,13 +34,8 @@ class DefinitionManager:
         return self.__symbols_and_field.get(symbol)
 
     def add(self, current_field):
-        if self.__definition_and_field.get(current_field.definition_number):
-            definition = self.__definition_and_field[current_field.definition_number]
-            definition.add_field(current_field)
-        else:
-            definition = Definition()
-            definition.add_field(current_field)
-            self.__definition_and_field.update({current_field.definition_number: definition})
+        definition = self.__definition_and_field[current_field.definition_number]
+        definition.add_field(current_field)
 
     def update_data_for_calculating(self):
         for definition_number, definition in self.__definition_and_field.items():
@@ -56,21 +50,25 @@ class DefinitionManager:
 
                 self.__symbols_and_field.update({current_field.symbol_item.symbol_and_definition: current_field})
 
+    def update_value_for_data(self, data) -> dict:
+        result = {}
+        for definition_number, definition in self.__definition_and_field.items():
+            for symbol in definition.all_definitions_symbols:
+                current_field = definition.field[symbol]
+                if current_field.symbol_item.symbol_and_definition in data:
+                    current_field.value = data[current_field.symbol_item.symbol_and_definition]
+                current_field.calc()
+                result.update({current_field._primary_key: current_field.value})
+        return result
+
 
 class Definition:
+
     def __init__(self):
         self.__check_ignore = False
         self.__input_manual = False
         self.__field = {}
         self.__all_definitions_symbols = set()
-
-    @property
-    def check_ignore(self):
-        return self.__check_ignore
-
-    @property
-    def input_manual(self):
-        return self.__input_manual
 
     @property
     def field(self):

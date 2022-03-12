@@ -3,13 +3,16 @@ from dataclasses import dataclass
 
 
 class AbstractField(ABC):
-    def __init__(self):
-        self._symbol = None
-        self._formula = None
+    def __init__(self, *, definition_number, symbol, formula, primary_key, **kwargs):
+        self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}') if symbol else None
+        self._formula = FormulaItem(formula, set())
         self._value = None
         self._value_only = False
-        self._definition_number = None
+        self._definition_number = definition_number
         self._field_number = None  # для иденнтификация поля
+        self._primary_key = primary_key
+        for name_attr, value_attr in kwargs.items():
+            self.__setattr__(name_attr, value_attr)
 
     @property
     def dependence(self):
@@ -77,13 +80,9 @@ class AbstractField(ABC):
 
 class IntegerField(AbstractField):
 
-    def __init__(self, *, symbol, formula, value=None, definition_number=0):
-        super().__init__()
-        if symbol:
-            self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}')
-        self._formula = FormulaItem(formula, set())
+    def __init__(self, *, symbol="", formula="", value=None, definition_number=1, primary_key,  **kwargs):
+        super().__init__(definition_number=definition_number, symbol=symbol, formula=formula, primary_key=primary_key, **kwargs)
         self._value = value
-        self._definition_number = definition_number
 
     def calc(self):
         self._value = float(eval(str(self._value))) if self._value else ''  # Расчет, округление
@@ -92,12 +91,9 @@ class IntegerField(AbstractField):
 
 class StringField(AbstractField):
 
-    def __init__(self, *, symbol, formula, value=None, definition_number=1):
-        super().__init__()
-        self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}')
-        self._formula = FormulaItem(formula, set())
+    def __init__(self, *, symbol="", formula="", value=None, definition_number=1, primary_key, **kwargs):
+        super().__init__(definition_number=definition_number, symbol=symbol, formula=formula, primary_key=primary_key, **kwargs)
         self._value = value
-        self._definition_number = definition_number
 
     def calc(self):
         return self._value
@@ -105,12 +101,9 @@ class StringField(AbstractField):
 
 class BoolField(AbstractField):
 
-    def __init__(self, *, symbol, formula=None, value, definition_number=1):
-        super().__init__()
-        self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}')
-        self._formula = FormulaItem(formula, set())
+    def __init__(self, *, symbol="", formula="", value, definition_number=1, primary_key, **kwargs):
+        super().__init__(definition_number=definition_number, symbol=symbol, formula=formula, primary_key=primary_key, **kwargs)
         self._value = True if value == 'True' else False
-        self._definition_number = definition_number
 
     def calc(self):
         pass
