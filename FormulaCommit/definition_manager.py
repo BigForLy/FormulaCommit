@@ -53,8 +53,7 @@ class DefinitionManager(ABC):
     def update_value_for_data(self, data) -> dict:
         result = {}
         for definition_number, definition in self._definition_and_field.items():
-            for symbol in definition.all_definitions_symbols:
-                current_field = definition.field[symbol]
+            for symbol, current_field in definition.field.items():
                 if current_field.symbol_item.symbol_and_definition in data:
                     current_field.value = data[current_field.symbol_item.symbol_and_definition]
                 current_field.calc()

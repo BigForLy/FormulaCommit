@@ -1,42 +1,24 @@
 import datetime
 from unittest import TestCase
-
-from memory_profiler import memory_usage
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
+from memory_profiler import profile
 from FormulaCommit.fields import IntegerField, StringField, BoolField
 from FormulaCommit.manage import FormulaCalculation, CalculationFactoryMySql, CalculationFactorySqlite
 
 
-def test_connection():
-    db = "mysql://root:3kmzghj3z@localhost:3306/lims?charset=utf8"
-    engine = create_engine(
-        db,
-        pool_recycle=3600,
-        connect_args={
-            'connect_timeout': 1
-        }
-    )
-    session = sessionmaker(bind=engine)
-    return session()
-
-
-session = test_connection()
-
-
 class CheckResultTest(TestCase):
 
+    @profile(precision=4)
     def test_ResultFind_simple_sum(self):
         data = [IntegerField(symbol="@a", formula="", value="2", primary_key=1),
                 IntegerField(symbol="@b", formula="", value="6", primary_key=2),
                 IntegerField(symbol="@c", formula="@a+@b", value="2", primary_key=3)]
         foo = datetime.datetime.now()
-        result = FormulaManagerMySql(data).calc()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        assert result == {2: 6.0, 1: 2.0, 3: 8.0}, "Неверное решение simple_sum"
+        assert result == {1: 2.0, 2: 6.0, 3: 8.0}, "Неверное решение simple_sum MySQL"
 
+    @profile(precision=4)
     def test_ResultFind_MySQL_gost_2477_2014(self):
         data = [StringField(symbol="", formula="", value="2", primary_key="1"),
                 StringField(symbol="", formula="", value="Да", primary_key="2"),
@@ -57,13 +39,13 @@ class CheckResultTest(TestCase):
                 StringField(symbol="@r", formula="avg(@exp)", value="", primary_key="14")]
         foo = datetime.datetime.now()
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
-        # result = FormulaManagerMySql(data).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        print(memory_usage())
-        assert result == {'2': 'Да', '1': '2', '14': 100.0, '13': 100.0, '12': 100.0, '10': 'False', '11': 'False',
-                          '9': 1.0, '8': 1.0}, "Неверное решение Гост 2477-2014 MySql"
+        assert result == {'1': '2', '2': 'Да', '13': 100.0, '14': 100.0, '3': 1.0, '4': 1.0, '5': True,
+                          '6': False, '7': '', '8': 1.0, '9': 1.0, '10': 'False', '11': 'False', '12': 100.0}, \
+            "Неверное решение Гост 2477-2014 MySql"
 
+    @profile(precision=4)
     def test_ResultFind_Sqlite_gost_2477_2014(self):
         data = [StringField(symbol="", formula="", value="2", primary_key="1"),
                 StringField(symbol="", formula="", value="Да", primary_key="2"),
@@ -86,6 +68,6 @@ class CheckResultTest(TestCase):
         result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        print(memory_usage())
-        assert result == {'13': 100.0, '2': 'Да', '14': 100.0, '1': '2', '12': 100.0, '9': 1.0, '8': 1.0,
-                          '10': 'False', '11': 'False'}, "Неверное решение Гост 2477-2014 Sqlite"
+        assert result == {'1': '2', '2': 'Да', '13': 100.0, '14': 100.0, '3': 1.0, '4': 1.0, '5': True,
+                          '6': False, '7': '', '8': 1.0, '9': 1.0, '10': 'False', '11': 'False', '12': 100.0}, \
+            "Неверное решение Гост 2477-2014 Sqlite"

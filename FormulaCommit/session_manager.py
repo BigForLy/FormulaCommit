@@ -94,6 +94,7 @@ class SqliteCalculatorDB(Calculator):
 
 
 class AbstractCalculationPlatformFactory(ABC):
+
     @abstractmethod
     def calculator(self) -> Calculator:
         pass

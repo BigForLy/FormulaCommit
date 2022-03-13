@@ -156,5 +156,5 @@ class FormulaCalculation:  # general class
         """
         return tuple(graphlib.TopologicalSorter(graph).static_order())
 
-    def __processing_of_calculation_results(self, dataset_result):  # временное решение
+    def __processing_of_calculation_results(self, dataset_result):
         return self.__definition_manager.update_value_for_data(dataset_result)
