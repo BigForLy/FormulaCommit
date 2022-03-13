@@ -2,8 +2,6 @@ import datetime
 import sqlite3
 # https://qna.habr.com/q/1066566
 from abc import ABC, abstractmethod
-
-from memory_profiler import memory_usage
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
@@ -27,58 +25,6 @@ from sqlalchemy.orm import sessionmaker
 from FormulaCommit.parse_sql import CalculateItem
 
 
-class ParserCalculationItemToExecuteString(ABC):
-    @abstractmethod
-    def parse(self, symbol_and_calculate_item_list) -> (str, str):
-        pass
-
-
-class ParserCalculationItemToExecuteStringMySQL(ParserCalculationItemToExecuteString):
-
-    def parse(self, symbol_and_calculate_item_list: dict[str, CalculateItem]) -> (str, str):
-        calc_string = ' '.join(list(map(lambda x: x[1].formula_old, symbol_and_calculate_item_list.items())))
-        select_string = ' select ' + ', '.join(list(map(lambda x: x[1].symbol_and_definition,
-                                                        symbol_and_calculate_item_list.items())))
-        print(calc_string, select_string)
-        return calc_string, select_string
-
-
-class ParserCalculationItemToExecuteStringSqlite(ParserCalculationItemToExecuteString):
-
-    def parse(self, symbol_and_calculate_item_list) -> (str, str):
-        const_item_formula = []
-        calc_item_formula = []
-        for item in symbol_and_calculate_item_list:
-            if item.is_formula:
-                calc_item_formula.append(f'insert into test(name, value) value ({item.formula});')
-            else:
-                const_item_formula.append(item.formula)
-        calc_string = 'create table test(name, value); insert into test(name, value) values ' \
-                      f'{" ".join(const_item_formula)}; {" ".join(calc_item_formula)}'
-        select_string = ' select ' + ', '.join(list(map(lambda x: x[1].symbol_and_definition,
-                                                        symbol_and_calculate_item_list))) + 'from test'
-        print(calc_string, select_string)
-        return calc_string, select_string
-
-
-class AbstractParserFactory(ABC):
-    @abstractmethod
-    def parser(self) -> ParserCalculationItemToExecuteString:
-        pass
-
-
-class ParserMySQLFactory(AbstractParserFactory):
-
-    def parser(self) -> ParserCalculationItemToExecuteString:
-        return ParserCalculationItemToExecuteStringMySQL()
-
-
-class ParserSqliteFactory(AbstractParserFactory):
-
-    def parser(self) -> ParserCalculationItemToExecuteString:
-        return ParserCalculationItemToExecuteStringSqlite()
-
-
 class Calculator(ABC):
     @abstractmethod
     def calculation(self, calc_string, select_string) -> dict:
@@ -86,9 +32,6 @@ class Calculator(ABC):
 
 
 class MySQLCalculator(Calculator):
-
-    def __init__(self, parser):
-        self.__parser = parser
 
     def calculation(self, calc_string, select_string) -> dict:
         def test_connection():
@@ -117,28 +60,23 @@ class MySQLCalculator(Calculator):
 
 class SqliteCalculatorMemory(Calculator):
 
-    def __init__(self, parser):
-        self.__parser = parser
-
-    def calculation(self, calc_string, select_string)-> dict:
+    def calculation(self, calc_string, select_string) -> dict:
         foo = datetime.datetime.now()
 
-        sqlite_connection = sqlite3.connect(":memory:")
-        cursor = sqlite_connection.cursor()
-        cursor.executescript(calc_string)
-        p = cursor.execute(select_string).fetchall()
+        with sqlite3.connect(":memory:") as sqlite_connection:
+            cursor = sqlite_connection.cursor()
+            cursor.executescript(calc_string)
+            data_result = cursor.execute(select_string).fetchone()
 
         bar = datetime.datetime.now()
-        p = dict(p)
-        print(p)
+        data_result = dict((name.replace('"', ''), value) for name, value in
+                           zip(list(data_result)[0::2], list(data_result)[1::2]))
+        print(data_result)
         print(bar - foo)
-        return p
+        return data_result
 
 
 class SqliteCalculatorDB(Calculator):
-
-    def __init__(self, parser):
-        self.__parser = parser
 
     def calculation(self, calc_string, select_string) -> dict:
         foo = datetime.datetime.now()
@@ -161,22 +99,19 @@ class AbstractCalculationPlatformFactory(ABC):
         pass
 
 
-class MySQLFactory(AbstractCalculationPlatformFactory):
+class MySQLCalculateFactory(AbstractCalculationPlatformFactory):
 
     def calculator(self) -> Calculator:
-        return MySQLCalculator(ParserCalculationItemToExecuteStringMySQL())
+        return MySQLCalculator()
 
 
-class SqliteMemoryFactory(AbstractCalculationPlatformFactory):
+class SqliteCalculateUsingMemoryFactory(AbstractCalculationPlatformFactory):
 
     def calculator(self) -> Calculator:
-        return SqliteCalculatorMemory(ParserCalculationItemToExecuteStringSqlite())
+        return SqliteCalculatorMemory()
 
 
 class SqliteDBFactory(AbstractCalculationPlatformFactory):
 
     def calculator(self) -> Calculator:
-        return SqliteCalculatorDB(ParserCalculationItemToExecuteStringSqlite())
-
-
-# print(memory_usage())
+        return SqliteCalculatorDB()

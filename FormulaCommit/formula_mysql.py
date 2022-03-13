@@ -12,19 +12,28 @@ class AbstractFormula(ABC):
         pass
 
 
-class StandardFormula(AbstractFormula):
+class AggregateMysqlFormula(AbstractFormula):  # Агрегирующая формула
     """
     Стандартная формула mysql, для рассчета необходимо передать именованный аргумент формулы в функцию
     get_transformation, пример: get_transformation(args, assay_number=n, formula_name='avg')
     """
 
     def get_transformation(self, args, *, assay_number, formula_name):
-        if assay_number:  # todo вероятно выделить в интерфейс проверку на assay_number
-            return f'(select {formula_name}(t.result) from(' + \
-                   ' union '.join([f'select {args}_{assay_number} as result' for assay_number in assay_number])\
-                   + ') as t)'
-        else:
-            return "(null)"
+        return f'(select {formula_name}(t.result) from(' + \
+               ' union '.join([f'select {args}_{number} as result' for number in assay_number]) \
+               + ') as t)'
+
+
+class AggregateSqliteFormula(AbstractFormula):  # Агрегирующая формула
+    """
+    Стандартная формула mysql, для рассчета необходимо передать именованный аргумент формулы в функцию
+    get_transformation, пример: get_transformation(args, assay_number=n, formula_name='avg')
+    """
+
+    def get_transformation(self, args, *, assay_number, formula_name):
+        return f'(select {formula_name}(t.result) from (' + \
+               ' union '.join([f'select {args}_{number} as result from variable' for number in assay_number]) \
+               + ') as t)'
 
 
 class FormulaOnly(AbstractFormula):

@@ -1,34 +1,113 @@
-import datetime
 import graphlib
 from abc import abstractmethod, ABC
-from sqlalchemy import text
-from FormulaCommit.definition_manager import DefinitionManager
-from FormulaCommit.session_manager import MySQLFactory, ParserCalculationItemToExecuteStringMySQL, ParserMySQLFactory
+from FormulaCommit.definition_manager import DefinitionManager, DefinitionManagerMySql, DefinitionManagerSqlite, \
+    DefinitionFactory, DefinitionFactoryMysql, DefinitionFactorySqlite
+from FormulaCommit.parse_sql import ParserMySQLFactory, ParserSqliteFactory
+from FormulaCommit.session_manager import MySQLCalculateFactory, SqliteCalculateUsingMemoryFactory
 
 
-class AbstractFormulaManager(ABC):
+#
+# @staticmethod
+# def __to_fixed_range(number, digit=0):
+#     """
+#     Округление перед выводом пользователю, позволяет дополнить нулями значение
+#     Использует округление в большую сторону, применять для проставления нулей
+#     :param number: объект для округления
+#     :param digit: количество знаков после запятой
+#     :return: значение с определенным количеством знаков после запятой
+#     """
+#     return f"{number:.{digit}f}"
+
+class AbstractCalculationMethod(ABC):
     """
-    Абстрактный класс менеджера формул
+    Абстрактный класс расчетного метода
 
     Methods
     -------
-    calc
+    calc_result
     """
 
-    def __init__(self):
-        self.__data = None
-        self._result = {}
+    @abstractmethod
+    def calc_result(self, symbol_and_calculate_item_list) -> dict:
+        """
+        Вычисление результата, включает парсер параметров и расчет значений
+        :param symbol_and_calculate_item_list:
+        :return:
+        """
+        pass
 
-    @staticmethod
-    def __to_fixed_range(number, digit=0):
+
+class CalculationMethodForMySql(AbstractCalculationMethod):
+
+    def calc_result(self, symbol_and_calculate_item_list) -> dict:
+        parser = ParserMySQLFactory().parser()
+        calc_string, select_string = parser.parse(symbol_and_calculate_item_list)
+        calculator = MySQLCalculateFactory().calculator()
+        dataset_result = calculator.calculation(calc_string, select_string)
+        return dataset_result
+
+
+class CalculationMethodForSqlite(AbstractCalculationMethod):
+
+    def calc_result(self, symbol_and_calculate_item_list) -> dict:
+        parser = ParserSqliteFactory().parser()
+        calc_string, select_string = parser.parse(symbol_and_calculate_item_list)
+        calculator = SqliteCalculateUsingMemoryFactory().calculator()
+        dataset_result = calculator.calculation(calc_string, select_string)
+        return dataset_result
+
+
+class AbstractCalculationFactory(ABC):
+    """
+    Фабрика расчетного менеджера
+
+    Methods
+    -------
+    calculation_method
+    definition_manager
+    """
+
+    @abstractmethod
+    def calculation_method(self) -> AbstractCalculationMethod:
         """
-        Округление перед выводом пользователю, позволяет дополнить нулями значение
-        Использует округление в большую сторону, применять для проставления нулей
-        :param number: объект для округления
-        :param digit: количество знаков после запятой
-        :return: значение с определенным количеством знаков после запятой
+
+        :return: экземпляр класса расчетного метода AbstractCalculationMethod
         """
-        return f"{number:.{digit}f}"
+        pass
+
+    @abstractmethod
+    def definition_manager(self) -> DefinitionFactory:
+        """
+
+        :return: экземпляр класса менеджера определений AbstractDefinition
+        """
+        pass
+
+
+class CalculationFactoryMySql(AbstractCalculationFactory):
+
+    def calculation_method(self) -> AbstractCalculationMethod:
+        return CalculationMethodForMySql()
+
+    def definition_manager(self) -> DefinitionFactory:
+        return DefinitionFactoryMysql()
+
+
+class CalculationFactorySqlite(AbstractCalculationFactory):
+
+    def calculation_method(self) -> AbstractCalculationMethod:
+        return CalculationMethodForSqlite()
+
+    def definition_manager(self) -> DefinitionFactory:
+        return DefinitionFactorySqlite()
+
+
+class FormulaCalculation:  # general class
+
+    def __init__(self, data, calculation_manager: AbstractCalculationFactory):
+        self.__data = data
+        self.__calculation_manager = calculation_manager
+        self.__definition_manager = calculation_manager.definition_manager().manager()
 
     def calc(self):
         """
@@ -43,11 +122,29 @@ class AbstractFormulaManager(ABC):
 
         calculated_graph = self._calculated_graph(graph)
 
-        return self._calc_result(calculated_graph)
+        symbol_and_calculate_item_list = self._collects_the_correct_sequence_of_formulas(calculated_graph)
 
-    @abstractmethod
+        calculation_method = self.__calculation_manager.calculation_method()
+        dataset_result = calculation_method.calc_result(symbol_and_calculate_item_list)
+
+        return self.__processing_of_calculation_results(dataset_result)
+
+    def _collects_the_correct_sequence_of_formulas(self, calculated_graph):
+        symbol_and_calculate_item_list = dict(map(lambda x: (x, self.__definition_manager.get_formula_by_symbol(x)),
+                                                  calculated_graph))
+        return symbol_and_calculate_item_list
+
     def _prepare_data_for_calculation(self):
-        pass
+        for current_field in self.__data:
+            self.__definition_manager.add(current_field)
+        self.__definition_manager.update_data_for_calculating()
+
+    def _collects_data_for_graph(self):
+        """
+        Подгатавливает параметры для графа
+        :return: словарь зависимостей формата dict[str: set]
+        """
+        return self.__definition_manager.all_field_dependencies_from_formula_symbol
 
     @staticmethod
     def _calculated_graph(graph):
@@ -58,52 +155,6 @@ class AbstractFormulaManager(ABC):
         :return: кортеж последовательности элементов
         """
         return tuple(graphlib.TopologicalSorter(graph).static_order())
-
-    @abstractmethod
-    def _collects_data_for_graph(self):
-        """
-        Подгатавливает параметры для графа
-        :return: словарь зависимостей формата dict[str: set]
-        """
-        pass
-
-    @abstractmethod
-    def _calc_result(self, calculated_graph):
-        """
-        Вычисление результата
-        :param calculated_graph: кортеж элементов отсортированный в необходимой последовательности рассчета
-        :return:
-        """
-        pass
-
-
-class FormulaManagerMySql(AbstractFormulaManager):
-
-    def __init__(self, data):
-        super().__init__()
-        self.__data = data
-        self.__definition_manager = DefinitionManager()
-
-    def _prepare_data_for_calculation(self):
-        for current_field in self.__data:
-            self.__definition_manager.add(current_field)
-        self.__definition_manager.update_data_for_calculating()
-
-    def _collects_data_for_graph(self):
-        return self.__definition_manager.all_field_dependencies_from_formula_symbol
-
-    def _calc_result(self, calculated_graph):
-        symbol_and_calculate_item_list = self._collects_the_correct_sequence_of_formulas(calculated_graph)
-        parser = ParserMySQLFactory().parser()
-        calc_string, select_string = parser.parse(symbol_and_calculate_item_list)
-        calculator = MySQLFactory().calculator()
-        dataset_result = calculator.calculation(calc_string, select_string)
-        return self.__processing_of_calculation_results(dataset_result)
-
-    def _collects_the_correct_sequence_of_formulas(self, calculated_graph):
-        symbol_and_calculate_item_list = dict(map(lambda x: (x, self.__definition_manager.get_formula_by_symbol(x)),
-                                                  calculated_graph))
-        return symbol_and_calculate_item_list
 
     def __processing_of_calculation_results(self, dataset_result):  # временное решение
         return self.__definition_manager.update_value_for_data(dataset_result)

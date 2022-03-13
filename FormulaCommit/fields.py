@@ -80,7 +80,7 @@ class AbstractField(ABC):
 
 class IntegerField(AbstractField):
 
-    def __init__(self, *, symbol="", formula="", value=None, definition_number=1, primary_key,  **kwargs):
+    def __init__(self, *, symbol="", formula="", value=None, definition_number=0, primary_key,  **kwargs):
         super().__init__(definition_number=definition_number, symbol=symbol, formula=formula, primary_key=primary_key, **kwargs)
         self._value = value
 
@@ -91,7 +91,7 @@ class IntegerField(AbstractField):
 
 class StringField(AbstractField):
 
-    def __init__(self, *, symbol="", formula="", value=None, definition_number=1, primary_key, **kwargs):
+    def __init__(self, *, symbol="", formula="", value=None, definition_number=0, primary_key, **kwargs):
         super().__init__(definition_number=definition_number, symbol=symbol, formula=formula, primary_key=primary_key, **kwargs)
         self._value = value
 
@@ -101,7 +101,7 @@ class StringField(AbstractField):
 
 class BoolField(AbstractField):
 
-    def __init__(self, *, symbol="", formula="", value, definition_number=1, primary_key, **kwargs):
+    def __init__(self, *, symbol="", formula="", value, definition_number=0, primary_key, **kwargs):
         super().__init__(definition_number=definition_number, symbol=symbol, formula=formula, primary_key=primary_key, **kwargs)
         self._value = True if value == 'True' else False
 

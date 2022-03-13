@@ -1,41 +1,37 @@
+from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
-from FormulaCommit.formula_mysql import FormulaOnly, StandardFormula
+from FormulaCommit.formula_mysql import FormulaOnly, AggregateMysqlFormula, AggregateSqliteFormula
 
 
-class ParseSqlManager:
+class ParseSqlManager(ABC):
 
     def __init__(self):
         self.__OPERATORS = {'+', '-', '*', '/'}
         self.isFormula = None
-        self.__func = {'avg': StandardFormula(),  # todo не создавать экземпляр класса каждый раз
-                       'only': FormulaOnly(),
-                       'max': StandardFormula(),
-                       'min': StandardFormula(),
-                       'sum': StandardFormula(),
-                       'count': StandardFormula()}
+        self._func = None
 
-    def update_formula(self, current_field, number_field_by_symbol):
+    @abstractmethod
+    def update_formula(self, current_field, number_field_by_symbol) -> str:
         """
         Изменяет формулу для расчета
         :param current_field: рассчитываемое поле
         :type current_field: AbstractField
         :return: формула
         """
-        all_param_generator = self.__parse(current_field.formula)
-        formula_list = self.shunting_yard(all_param_generator, current_field._definition_number, number_field_by_symbol)
-        return ''.join(list(formula_list))
+        pass
 
-    def update_dependence(self, formula):
+    @abstractmethod
+    def update_dependence(self, formula) -> set[str]:
         """
         Рассчитывает список зависимостей у формулы
         :param current_field: рассчитываемое поле
         :type current_field: AbstractField
         :return: множество зависимостей у формулы поля
         """
-        return set(x for x in self.__parse(formula) if '@' in x)
+        pass
 
-    def __parse(self, formula_string):
+    def _parse(self, formula_string):
         """
         Разделяет параметры на отдельные элементы при помощи разделителей из garbage
         :param formula_string: изначальная формула поля
@@ -78,9 +74,9 @@ class ParseSqlManager:
         """
         stack = []
         for token in parsed_formula:
-            if token in self.__func:
+            if token in self._func:
                 stack.append(token)
-                self.isFormula = self.__func[token]
+                self.isFormula = self._func[token]
             elif token == ")":
                 if self.isFormula:
                     ready_params_for_formula = []
@@ -126,13 +122,17 @@ class ParseSqlManager:
         """
         while stack:
             x = stack.pop()
-            if x in self.__func:
+            if x in self._func:
                 param = []
-                current_func = self.__func[x]
+                current_func = self._func[x]
                 for i in range(current_func.count_param):
                     param.append(stack.pop())
-                func_result = current_func.get_transformation(*param, assay_number=number_field_by_symbol.get(param[0]),
-                                                              formula_name=x)
+                if number_field_by_symbol.get(param[0]):
+                    func_result = current_func.get_transformation(*param,
+                                                                  assay_number=number_field_by_symbol.get(param[0]),
+                                                                  formula_name=x)
+                else:
+                    func_result = '(null)'
                 yield func_result
             else:
                 if '@' in x:
@@ -152,7 +152,7 @@ class ParseSqlManager:
                              current_field.formula is not None and current_field.formula != '' and
                              not current_field._value_only,
                              f'set {current_field.symbol_item.symbol_and_definition}:={term};',
-                             f'({current_field.symbol_item.symbol_and_definition}, {term})',
+                             f'({term})',
                              )
 
 
@@ -162,3 +162,126 @@ class CalculateItem:
     is_formula: bool  # Если True то формула, если False то value
     formula_old: str  # Формула для mysql
     formula: str  # переименовать
+
+
+class ParseMySQLManager(ParseSqlManager):
+
+    def __init__(self):
+        super().__init__()
+        self._func = {'avg': AggregateMysqlFormula(),
+                      'only': FormulaOnly(),
+                      'max': AggregateMysqlFormula(),
+                      'min': AggregateMysqlFormula(),
+                      'sum': AggregateMysqlFormula(),
+                      'count': AggregateMysqlFormula()}
+
+    def update_formula(self, current_field, number_field_by_symbol) -> str:
+        """
+        Изменяет формулу для расчета
+        :param current_field: рассчитываемое поле
+        :type current_field: AbstractField
+        :return: формула
+        """
+        all_param_generator = self._parse(current_field.formula)
+        formula_list = self.shunting_yard(all_param_generator, current_field._definition_number, number_field_by_symbol)
+        return ''.join(list(formula_list))
+
+    def update_dependence(self, formula) -> set[str]:
+        """
+        Рассчитывает список зависимостей у формулы
+        :param current_field: рассчитываемое поле
+        :type current_field: AbstractField
+        :return: множество зависимостей у формулы поля
+        """
+        return set(x for x in self._parse(formula) if '@' in x)
+
+
+class ParseSqliteManager(ParseSqlManager):
+
+    def __init__(self):
+        super().__init__()
+        self._func = {'avg': AggregateSqliteFormula(),  # todo переделать в хранитель ссылок на класс а не экземпляр
+                      # 'only': FormulaOnly(),
+                      'max': AggregateSqliteFormula(),
+                      'min': AggregateSqliteFormula(),
+                      'sum': AggregateSqliteFormula(),
+                      'count': AggregateSqliteFormula()}
+
+    def update_formula(self, current_field, number_field_by_symbol) -> str:
+        """
+        Изменяет формулу для расчета
+        :param current_field: рассчитываемое поле
+        :type current_field: AbstractField
+        :return: формула
+        """
+        all_param_generator = self._parse(current_field.formula)
+        formula_list = self.shunting_yard(all_param_generator, current_field._definition_number, number_field_by_symbol)
+        formula_item = self._parse(''.join(list(formula_list)))
+        formula_str = ''
+        for item in formula_item:
+            formula_str += f'"{item}"' if '@' in item else item
+        return formula_str
+
+    def update_dependence(self, formula) -> set[str]:
+        """
+        Рассчитывает список зависимостей у формулы
+        :param current_field: рассчитываемое поле
+        :type current_field: AbstractField
+        :return: множество зависимостей у формулы поля
+        """
+        return set(x.replace('"', '') for x in self._parse(formula) if '@' in x)
+
+
+class ParserCalculationItemToExecuteString(ABC):
+
+    @abstractmethod
+    def parse(self, symbol_and_calculate_item_list) -> (str, str):
+        pass
+
+
+class ParserCalculationItemToExecuteStringMySQL(ParserCalculationItemToExecuteString):
+
+    def parse(self, symbol_and_calculate_item_list: dict[str, CalculateItem]) -> (str, str):
+        calc_string = ' '.join(list(map(lambda x: x[1].formula_old, symbol_and_calculate_item_list.items())))
+        select_string = ' select ' + ', '.join(list(map(lambda x: x[1].symbol_and_definition,
+                                                        symbol_and_calculate_item_list.items())))
+        print(calc_string, select_string)
+        return calc_string, select_string
+
+
+class ParserCalculationItemToExecuteStringSqlite(ParserCalculationItemToExecuteString):
+
+    def parse(self, symbol_and_calculate_item_list) -> (str, str):
+        calc_item_formula = []
+        for _, item in symbol_and_calculate_item_list.items():
+            calc_item_formula.append(
+                f'update variable set "{item.symbol_and_definition}"=(select {item.formula} from variable);')
+        column_variable = '"' + '", "'.join(list(map(lambda x: x[1].symbol_and_definition,
+                                                     symbol_and_calculate_item_list.items()))) + '"'
+        calc_string = f'CREATE TEMP TABLE IF NOT EXISTS variable({column_variable}); insert into variable (' + column_variable \
+                      + f') values ({", ".join(["null" for _ in symbol_and_calculate_item_list])}); ' \
+                        f'{" ".join(calc_item_formula)};'
+        select_string = ' select ' + ', '.join(
+            list(map(lambda x: f'"""{x[1].symbol_and_definition}""", "{x[1].symbol_and_definition}"',
+                     symbol_and_calculate_item_list.items()))) + ' from variable;'
+        print(calc_string, select_string)
+        return calc_string, select_string
+
+
+class AbstractParserFactory(ABC):
+
+    @abstractmethod
+    def parser(self) -> ParserCalculationItemToExecuteString:
+        pass
+
+
+class ParserMySQLFactory(AbstractParserFactory):
+
+    def parser(self) -> ParserCalculationItemToExecuteString:
+        return ParserCalculationItemToExecuteStringMySQL()
+
+
+class ParserSqliteFactory(AbstractParserFactory):
+
+    def parser(self) -> ParserCalculationItemToExecuteString:
+        return ParserCalculationItemToExecuteStringSqlite()

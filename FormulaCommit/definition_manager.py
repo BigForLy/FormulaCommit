@@ -1,58 +1,58 @@
+from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any
 
-from FormulaCommit.parse_sql import ParseSqlManager
+from FormulaCommit.parse_sql import ParseMySQLManager, ParseSqliteManager
 
 
-class DefinitionManager:
+class DefinitionManager(ABC):
 
     def __init__(self):
-        self.__parser_manager = ParseSqlManager()
-        self.__definition_and_field: dict[int, Definition] = defaultdict(Definition)  # словарь определений и полей
+        self._parser_manager = None
+        self._definition_and_field: dict[int, Definition] = defaultdict(Definition)  # словарь определений и полей
         self.__symbols_and_definition_numbers_by_lazy: dict[int, list] = defaultdict(list)
-        self.__symbols_and_field = {}
+        self._symbols_and_field = {}
 
     @property
     def symbols_and_definition_numbers(self):
         if self.__symbols_and_definition_numbers_by_lazy:
             return self.__symbols_and_definition_numbers_by_lazy
         else:
-            for number_definition, definition in self.__definition_and_field.items():
+            for number_definition, definition in self._definition_and_field.items():
                 for symbol in definition.all_definitions_symbols:
                     self.__symbols_and_definition_numbers_by_lazy[symbol].append(number_definition)
             return self.__symbols_and_definition_numbers_by_lazy
 
     @property
     def all_field_dependencies_from_formula_symbol(self):
-        return dict(map(lambda field: (field[0], field[1].dependence), self.__symbols_and_field.items()))
+        return dict(map(lambda field: (field[0], field[1].dependence), self._symbols_and_field.items()))
 
     def get_formula_by_symbol(self, symbol):
-        return self.__parser_manager.parameter_for_calculating_the_result(current_field=
-                                                                          self.__symbols_and_field[symbol])
+        return self._parser_manager.parameter_for_calculating_the_result(current_field=
+                                                                          self._symbols_and_field[symbol])
 
     def get_field_by_symbol(self, symbol):
-        return self.__symbols_and_field.get(symbol)
+        return self._symbols_and_field.get(symbol)
 
     def add(self, current_field):
-        definition = self.__definition_and_field[current_field.definition_number]
+        definition = self._definition_and_field[current_field.definition_number]
         definition.add_field(current_field)
 
     def update_data_for_calculating(self):
-        for definition_number, definition in self.__definition_and_field.items():
+        for definition_number, definition in self._definition_and_field.items():
             for symbol in definition.all_definitions_symbols:
                 current_field = definition.field[symbol]
                 if current_field.formula:
-                    current_field.formula = self.__parser_manager.update_formula(
+                    current_field.formula = self._parser_manager.update_formula(
                         current_field,
                         self.symbols_and_definition_numbers)
                     current_field.dependence = set() if current_field._value_only else \
-                        self.__parser_manager.update_dependence(current_field.formula)
+                        self._parser_manager.update_dependence(current_field.formula)
 
-                self.__symbols_and_field.update({current_field.symbol_item.symbol_and_definition: current_field})
+                self._symbols_and_field.update({current_field.symbol_item.symbol_and_definition: current_field})
 
     def update_value_for_data(self, data) -> dict:
         result = {}
-        for definition_number, definition in self.__definition_and_field.items():
+        for definition_number, definition in self._definition_and_field.items():
             for symbol in definition.all_definitions_symbols:
                 current_field = definition.field[symbol]
                 if current_field.symbol_item.symbol_and_definition in data:
@@ -60,6 +60,49 @@ class DefinitionManager:
                 current_field.calc()
                 result.update({current_field._primary_key: current_field.value})
         return result
+
+
+class DefinitionManagerMySql(DefinitionManager):
+
+    def __init__(self):
+        super().__init__()
+        self._parser_manager = ParseMySQLManager()
+
+
+class DefinitionManagerSqlite(DefinitionManager):
+
+    def __init__(self):
+        super().__init__()
+        self._parser_manager = ParseSqliteManager()
+
+
+class DefinitionFactory(ABC):
+    """
+    Фабрика менеджера определений
+
+    Methods
+    -------
+    manager
+    """
+
+    @abstractmethod
+    def manager(self) -> DefinitionManager:
+        """
+        :return: экземпляр класса DefinitionManager
+        """
+        pass
+
+
+class DefinitionFactoryMysql(DefinitionFactory):
+
+    def manager(self) -> DefinitionManager:
+        return DefinitionManagerMySql()
+
+
+class DefinitionFactorySqlite(DefinitionFactory):
+
+    def manager(self) -> DefinitionManager:
+        return DefinitionManagerSqlite()
 
 
 class Definition:
