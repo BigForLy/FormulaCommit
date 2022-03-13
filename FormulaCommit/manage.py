@@ -1,7 +1,6 @@
 import graphlib
 from abc import abstractmethod, ABC
-from FormulaCommit.definition_manager import DefinitionManager, DefinitionManagerMySql, DefinitionManagerSqlite, \
-    DefinitionFactory, DefinitionFactoryMysql, DefinitionFactorySqlite
+from FormulaCommit.definition_manager import DefinitionFactory, DefinitionFactoryMysql, DefinitionFactorySqlite
 from FormulaCommit.parse_sql import ParserMySQLFactory, ParserSqliteFactory
 from FormulaCommit.session_manager import MySQLCalculateFactory, SqliteCalculateUsingMemoryFactory
 

@@ -256,14 +256,15 @@ class ParserCalculationItemToExecuteStringSqlite(ParserCalculationItemToExecuteS
         for _, item in symbol_and_calculate_item_list.items():
             calc_item_formula.append(
                 f'update variable set "{item.symbol_and_definition}"=(select {item.formula} from variable);')
-        column_variable = '"' + '", "'.join(list(map(lambda x: x[1].symbol_and_definition,
-                                                     symbol_and_calculate_item_list.items()))) + '"'
-        calc_string = f'CREATE TEMP TABLE IF NOT EXISTS variable({column_variable}); insert into variable (' + column_variable \
-                      + f') values ({", ".join(["null" for _ in symbol_and_calculate_item_list])}); ' \
-                        f'{" ".join(calc_item_formula)};'
+        list_symbol_and_definition = list(map(lambda x: x[1].symbol_and_definition,
+                                              symbol_and_calculate_item_list.items()))
+        column_variable = '"' + '", "'.join(list_symbol_and_definition) + '"'
+        calc_string = f'CREATE TEMP TABLE IF NOT EXISTS variable({column_variable}); ' \
+                      f'insert into variable ({column_variable}) ' \
+                      f'values ({", ".join(["null" for _ in list_symbol_and_definition])}); ' \
+                      f'{" ".join(calc_item_formula)};'
         select_string = ' select ' + ', '.join(
-            list(map(lambda x: f'"""{x[1].symbol_and_definition}""", "{x[1].symbol_and_definition}"',
-                     symbol_and_calculate_item_list.items()))) + ' from variable;'
+            list(map(lambda x: f'"""{x}""", "{x}"', list_symbol_and_definition))) + ' from variable;'
         print(calc_string, select_string)
         return calc_string, select_string
 
