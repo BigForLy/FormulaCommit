@@ -160,13 +160,10 @@ class ParseSqlManager(ABC):
                     if isinstance(item, list):
                         item = list(self.__update_func_param(item, definition_number, number_field_by_symbol))[0]
                     param.append(item)
-                # if number_field_by_symbol.get(param[0]):  #todo
                 param = self.__update_formula_param_by_delimiter(param, current_func.delimiter)
                 func_result = current_func.get_transformation(*param,
-                                                              assay_number=number_field_by_symbol.get(param[0]),  # todo возможно ошибка для if
+                                                              assay_number=number_field_by_symbol.get(param[0]),
                                                               formula_name=x)
-                # else:
-                #     func_result = '(null)'
                 yield func_result
             else:
                 if '@' in x:
@@ -314,7 +311,7 @@ class ParserCalculationItemToExecuteStringSqlite(ParserCalculationItemToExecuteS
         calc_string = f'CREATE TEMP TABLE IF NOT EXISTS variable({column_variable}); ' \
                       f'insert into variable ({column_variable}) ' \
                       f'values ({", ".join(["null" for _ in list_symbol_and_definition])}); ' \
-                      f'{" ".join(calc_item_formula)};'
+                      f'{" ".join(calc_item_formula)}'
         select_string = ' select ' + ', '.join(
             list(map(lambda x: f'"""{x}""", "{x}"', list_symbol_and_definition))) + ' from variable;'
         print(calc_string, select_string)

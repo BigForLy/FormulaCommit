@@ -31,9 +31,12 @@ class AggregateSqliteFormula(AbstractFormula):  # Агрегирующая фо�
     """
 
     def get_transformation(self, args, *, assay_number, formula_name):
-        return f'(select {formula_name}(t.result) from (' + \
-               ' union '.join([f'select {args}_{number} as result from variable' for number in assay_number]) \
-               + ') as t)'
+        if assay_number:
+            return f'(select {formula_name}(t.result) from (' + \
+                   ' union '.join([f'select {args}_{number} as result from variable' for number in assay_number]) \
+                   + ') as t)'
+        else:
+            return '(null)'
 
 
 class FormulaOnlyMySQL(AbstractFormula):

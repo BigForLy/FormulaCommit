@@ -86,7 +86,6 @@ class IntegerField(AbstractField):
 
     def calc(self):
         self._value = float(eval(str(self._value))) if self._value else ''  # Расчет, округление
-        return self._value
 
 
 class StringField(AbstractField):
@@ -96,7 +95,7 @@ class StringField(AbstractField):
         self._value = value
 
     def calc(self):
-        return self._value
+        self._value = str(self._value) if self._value else ''
 
 
 class BoolField(AbstractField):
@@ -106,7 +105,7 @@ class BoolField(AbstractField):
         self._value = True if value == 'True' else False
 
     def calc(self):
-        pass
+        self._value = True if self._value == 'True' else False
 
 
 @dataclass

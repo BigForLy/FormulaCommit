@@ -56,7 +56,7 @@ class DefinitionManager(ABC):
             for symbol, current_field in definition.field.items():
                 if current_field.symbol_item.symbol_and_definition in data:
                     current_field.value = data[current_field.symbol_item.symbol_and_definition]
-                current_field.calc()
+                    current_field.calc()
                 result.update({current_field._primary_key: current_field.value})
         return result
 
