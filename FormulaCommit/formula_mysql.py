@@ -36,14 +36,14 @@ class AggregateSqliteFormula(AbstractFormula):  # Агрегирующая фо�
                + ') as t)'
 
 
-class FormulaOnly(AbstractFormula):
+class FormulaOnlyMySQL(AbstractFormula):
 
     def __init__(self):
         super().__init__()
         self.delimiter = ','
 
     def get_transformation(self, *args, **kwargs):
-        if kwargs['assay_number']:
+        if kwargs['assay_number']:  # todo проверить как работает, вроде уже устранил ошибку
             return '(select if(count(t.result)>1, ' \
                    f'{f"{args[2]}, {args[1]}" if len(args) == 3 else f"{args[1]}, t.result"}) from(' + \
                    ' union '.join([f'select distinct {args[0]}_{assay_number} as result'
@@ -51,3 +51,30 @@ class FormulaOnly(AbstractFormula):
                    + ') as t)'
         else:
             return "(null)"
+
+
+class FormulaOnlySqlite(AbstractFormula):
+
+    def __init__(self):
+        super().__init__()
+        self.delimiter = ','
+
+    def get_transformation(self, *args, **kwargs):
+        if kwargs['assay_number']:  # todo проверить как работает, вроде уже устранил ошибку
+            return '(select CASE WHEN count(t.result)>1 then ' \
+                   f'{f"{args[2]} else {args[1]}" if len(args) == 3 else f"{args[1]} else t.result"} end from (' + \
+                   ' union '.join([f'select distinct {args[0]}_{assay_number} as result'
+                                   for assay_number in kwargs['assay_number']]) \
+                   + ') as t)'
+        else:
+            return "(null)"
+
+
+class FormulaIFSqlite(AbstractFormula):
+
+    def __init__(self):
+        super().__init__()
+        self.delimiter = ','
+
+    def get_transformation(self, *args, **kwargs):
+        return f'(SELECT CASE WHEN {args[0]} THEN {args[1]} ELSE {args[2]}  END)'

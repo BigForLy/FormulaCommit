@@ -1,7 +1,8 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
-from FormulaCommit.formula_mysql import FormulaOnly, AggregateMysqlFormula, AggregateSqliteFormula
+from FormulaCommit.formula_mysql import FormulaOnlyMySQL, AggregateMysqlFormula, AggregateSqliteFormula, \
+    FormulaOnlySqlite, FormulaIFSqlite, AbstractFormula
 
 
 class ParseSqlManager(ABC):
@@ -72,43 +73,65 @@ class ParseSqlManager(ABC):
         :type parsed_formula: generator
         :return: обновленный список элементов используемый для функций и расчета
         """
-        stack = []
+        stack_list: list[ParserItem] = [ParserItem(None, [])]
+        parser_item = stack_list[-1]
         for token in parsed_formula:
             if token in self._func:
-                stack.append(token)
-                self.isFormula = self._func[token]
+                stack_list.append(ParserItem(self._func[token], []))
+                parser_item = stack_list[-1]
+                parser_item.stack.append(token)
             elif token == ")":
-                if self.isFormula:
+                if parser_item.is_formula:
                     ready_params_for_formula = []
                     temporary_params = []
-                    while stack:
-                        x = stack.pop()
+                    while parser_item.stack:
+                        x = parser_item.stack.pop()
                         if x == "(":
                             if temporary_params:
                                 foo = ''.join(temporary_params[::-1])
                                 temporary_params.clear()
                                 ready_params_for_formula.append(foo)
                             break
-                        elif x == self.isFormula.delimiter:
+                        elif x == parser_item.is_formula.delimiter:
                             foo = ''.join(temporary_params[::-1])
                             temporary_params.clear()
-                            ready_params_for_formula.append(foo)
+                            if foo.replace(' ', ''):
+                                ready_params_for_formula.append(foo)
+                        elif type(x) is list:
+                            ready_params_for_formula.append(x)
                         else:
                             temporary_params.append(x)
                     if temporary_params:
                         foo = ''.join(temporary_params[::-1])
                         temporary_params.clear()
                         ready_params_for_formula.append(foo)
-                    self.isFormula.count_param = len(ready_params_for_formula)
-                    stack += ready_params_for_formula[::-1]
+                    parser_item.is_formula.count_param = len(ready_params_for_formula)
+                    parser_item.stack += ready_params_for_formula[::-1]
                 else:
-                    stack.append(token)
-                self.isFormula = None
+                    parser_item.stack.append(token)
+                if parser_item.is_formula:
+                    last_parser_item = stack_list.pop()
+                    parser_item = stack_list[-1]
+                    parser_item.stack.append(last_parser_item.stack[::-1])
+                else:
+                    parser_item.stack = parser_item.stack[::-1]
             elif token == "(":
-                stack.append(token)
+                parser_item.stack.append(token)
+            elif token == " " and parser_item.is_formula and len(parser_item.stack) == 1:
+                pass
             else:
-                stack.append(token)
-        return stack[::-1]
+                parser_item.stack.append(token)
+        assert len(stack_list) == 1
+        result = list(self.__unpacking(stack_list[0].stack))
+        return result
+        # return stack_list[0].stack[0]
+
+    def __unpacking(self, item):
+        if isinstance(item, list):
+            if len(item) == 1:
+                return self.__unpacking(item[0])
+            else:
+                return item
 
     def __update_func_param(self, stack, definition_number, number_field_by_symbol):
         """
@@ -126,13 +149,16 @@ class ParseSqlManager(ABC):
                 param = []
                 current_func = self._func[x]
                 for i in range(current_func.count_param):
-                    param.append(stack.pop())
-                if number_field_by_symbol.get(param[0]):
-                    func_result = current_func.get_transformation(*param,
-                                                                  assay_number=number_field_by_symbol.get(param[0]),
-                                                                  formula_name=x)
-                else:
-                    func_result = '(null)'
+                    item = stack.pop()
+                    if isinstance(item, list):
+                        item = list(self.__update_func_param(item, definition_number, number_field_by_symbol))[0]
+                    param.append(item)
+                # if number_field_by_symbol.get(param[0]):
+                func_result = current_func.get_transformation(*param,
+                                                              assay_number=number_field_by_symbol.get(param[0]),
+                                                              formula_name=x)
+                # else:
+                #     func_result = '(null)'
                 yield func_result
             else:
                 if '@' in x:
@@ -164,12 +190,18 @@ class CalculateItem:
     formula: str  # переименовать
 
 
+@dataclass
+class ParserItem:
+    is_formula: AbstractFormula | None
+    stack: list
+
+
 class ParseMySQLManager(ParseSqlManager):
 
     def __init__(self):
         super().__init__()
         self._func = {'avg': AggregateMysqlFormula(),
-                      'only': FormulaOnly(),
+                      'only': FormulaOnlyMySQL(),
                       'max': AggregateMysqlFormula(),
                       'min': AggregateMysqlFormula(),
                       'sum': AggregateMysqlFormula(),
@@ -201,11 +233,12 @@ class ParseSqliteManager(ParseSqlManager):
     def __init__(self):
         super().__init__()
         self._func = {'avg': AggregateSqliteFormula(),  # todo переделать в хранитель ссылок на класс а не экземпляр
-                      # 'only': FormulaOnly(),
+                      'only': FormulaOnlySqlite(),
                       'max': AggregateSqliteFormula(),
                       'min': AggregateSqliteFormula(),
                       'sum': AggregateSqliteFormula(),
-                      'count': AggregateSqliteFormula()}
+                      'count': AggregateSqliteFormula(),
+                      'if': FormulaIFSqlite()}
 
     def update_formula(self, current_field, number_field_by_symbol) -> str:
         """

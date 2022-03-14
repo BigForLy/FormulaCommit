@@ -1,11 +1,11 @@
 import datetime
-from unittest import TestCase
+import unittest
 from memory_profiler import profile
 from FormulaCommit.fields import IntegerField, StringField, BoolField
 from FormulaCommit.manage import FormulaCalculation, CalculationFactoryMySql, CalculationFactorySqlite
 
 
-class CheckResultTest(TestCase):
+class CheckResultTest(unittest.TestCase):
 
     @profile(precision=4)
     def test_ResultFind_simple_sum(self):
@@ -71,3 +71,107 @@ class CheckResultTest(TestCase):
         assert result == {'1': '2', '2': 'Да', '13': 100.0, '14': 100.0, '3': 1.0, '4': 1.0, '5': True,
                           '6': False, '7': '', '8': 1.0, '9': 1.0, '10': 'False', '11': 'False', '12': 100.0}, \
             "Неверное решение Гост 2477-2014 Sqlite"
+
+
+class CheckFormulaIFResultTest(unittest.TestCase):
+
+    @profile(precision=4)
+    def test_ResultFind_Sqlite_IF1_equals(self):
+        data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='if(@t_1 = 1, 1,  if (@t_1 = 2, 2 , "Enother"))', value="500",
+                            definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет', '2': 'Привет', '3': 'Enother'}, \
+            "Неверное решение ResultOnly 1 param Sqlite"
+
+    @profile(precision=4)
+    def test_ResultFind_Sqlite_IF1_not_equals(self):
+        data = [StringField(symbol="@t", formula="", value="Привет1", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='if(@t_1 = "Привет1", "1",  if (@t_1 = 2, 2 , "Enother"))',
+                            value="500", definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет1', '2': 'Привет', '3': '1'}, \
+            "Неверное решение ResultOnly 1 param Sqlite"
+
+    @profile(precision=4)
+    def test_ResultFind_Sqlite_IF2(self):
+        data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='if    (@t_1 = 1, 1, "Enother")', value="500",
+                            definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет', '2': 'Привет', '3': 'Enother'}, \
+            "Неверное решение ResultOnly 1 param Sqlite"
+
+
+class CheckFormulaOnlyResultTest(unittest.TestCase):
+
+    @profile(precision=4)
+    def test_MySQL_1param_equals(self):
+        data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='only(@t, "Разногласие по параметрам")', value="500",
+                            definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет', '2': 'Привет', '3': 'Привет'}, \
+            "Неверное решение ResultOnly 1 param MySQL"
+
+    @profile(precision=4)
+    def test_MySQL_1param_not_equals(self):
+        data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет1", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='only(@t, "Разногласие по параметрам")', value="500",
+                            definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет', '2': 'Привет1', '3': 'Разногласие по параметрам'}, \
+            "Неверное решение ResultOnly 1 param MySQL"
+
+    @profile(precision=4)
+    def test_Sqlite_1param_equals(self):
+        data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='only(@t, "Разногласие по параметрам")', value="500",
+                            definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет', '2': 'Привет', '3': 'Привет'}, \
+            "Неверное решение ResultOnly 1 param Sqlite"
+
+    @profile(precision=4)
+    def test_Sqlite_1param_not_equals(self):
+        data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет1", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='only(@t, "Разногласие по параметрам")', value="500",
+                            definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет', '2': 'Привет1', '3': 'Разногласие по параметрам'}, \
+            "Неверное решение ResultOnly 1 param Sqlite"
