@@ -1,6 +1,7 @@
 import datetime
 import sqlite3
 # https://qna.habr.com/q/1066566
+# https://coderlessons.com/tutorials/bazy-dannykh/vyuchit-sqlite/sqlite-kratkoe-rukovodstvo
 from abc import ABC, abstractmethod
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -22,7 +23,6 @@ from sqlalchemy.orm import sessionmaker
 # print(p)
 # print(dict(p))
 # print(bar - foo)
-from FormulaCommit.parse_sql import CalculateItem
 
 
 class Calculator(ABC):
@@ -106,7 +106,7 @@ class MySQLCalculateFactory(AbstractCalculationPlatformFactory):
         return MySQLCalculator()
 
 
-class SqliteCalculateUsingMemoryFactory(AbstractCalculationPlatformFactory):
+class SqliteCalculatorUsingMemoryFactory(AbstractCalculationPlatformFactory):
 
     def calculator(self) -> Calculator:
         return SqliteCalculatorMemory()

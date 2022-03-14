@@ -2,7 +2,7 @@ import graphlib
 from abc import abstractmethod, ABC
 from FormulaCommit.definition_manager import DefinitionFactory, DefinitionFactoryMysql, DefinitionFactorySqlite
 from FormulaCommit.parse_sql import ParserMySQLFactory, ParserSqliteFactory
-from FormulaCommit.session_manager import MySQLCalculateFactory, SqliteCalculateUsingMemoryFactory
+from FormulaCommit.session_manager import MySQLCalculateFactory, SqliteCalculatorUsingMemoryFactory
 
 
 #
@@ -51,7 +51,7 @@ class CalculationMethodForSqlite(AbstractCalculationMethod):
     def calc_result(self, symbol_and_calculate_item_list) -> dict:
         parser = ParserSqliteFactory().parser()
         calc_string, select_string = parser.parse(symbol_and_calculate_item_list)
-        calculator = SqliteCalculateUsingMemoryFactory().calculator()
+        calculator = SqliteCalculatorUsingMemoryFactory().calculator()
         dataset_result = calculator.calculation(calc_string, select_string)
         return dataset_result
 

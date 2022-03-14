@@ -97,7 +97,18 @@ class ParseSqlManager(ABC):
                             temporary_params.clear()
                             if foo.replace(' ', ''):
                                 ready_params_for_formula.append(foo)
+                            ready_params_for_formula.append(parser_item.is_formula.delimiter)
                         elif type(x) is list:
+                            if temporary_params:
+                                foo = ''.join(temporary_params[::-1])
+                                temporary_params.clear()
+                                ready_params_for_formula.append(foo)
+                            ready_params_for_formula.append(x)
+                        elif '@' in x:
+                            if temporary_params:
+                                foo = ''.join(temporary_params[::-1])
+                                temporary_params.clear()
+                                ready_params_for_formula.append(foo)
                             ready_params_for_formula.append(x)
                         else:
                             temporary_params.append(x)
@@ -107,13 +118,11 @@ class ParseSqlManager(ABC):
                         ready_params_for_formula.append(foo)
                     parser_item.is_formula.count_param = len(ready_params_for_formula)
                     parser_item.stack += ready_params_for_formula[::-1]
-                else:
-                    parser_item.stack.append(token)
-                if parser_item.is_formula:
                     last_parser_item = stack_list.pop()
                     parser_item = stack_list[-1]
                     parser_item.stack.append(last_parser_item.stack[::-1])
                 else:
+                    parser_item.stack.append(token)
                     parser_item.stack = parser_item.stack[::-1]
             elif token == "(":
                 parser_item.stack.append(token)
@@ -152,8 +161,9 @@ class ParseSqlManager(ABC):
                         item = list(self.__update_func_param(item, definition_number, number_field_by_symbol))[0]
                     param.append(item)
                 # if number_field_by_symbol.get(param[0]):  #todo
+                param = self.__update_formula_param_by_delimiter(param, current_func.delimiter)
                 func_result = current_func.get_transformation(*param,
-                                                              assay_number=number_field_by_symbol.get(param[0]),
+                                                              assay_number=number_field_by_symbol.get(param[0]),  # todo возможно ошибка для if
                                                               formula_name=x)
                 # else:
                 #     func_result = '(null)'
@@ -167,6 +177,17 @@ class ParseSqlManager(ABC):
                     yield now_x
                 else:
                     yield x
+
+    def __update_formula_param_by_delimiter(self, all_param, delimiter):
+        param_delimiter = [[]]
+        actual_param = param_delimiter[0]
+        for i in all_param:
+            if i == delimiter:
+                param_delimiter.append([])
+                actual_param = param_delimiter[len(param_delimiter) - 1]
+            else:
+                actual_param.append(i)
+        return [''.join(x) for x in param_delimiter]
 
     @staticmethod
     def parameter_for_calculating_the_result(*, current_field):

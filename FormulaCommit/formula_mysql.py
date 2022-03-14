@@ -43,7 +43,7 @@ class FormulaOnlyMySQL(AbstractFormula):
         self.delimiter = ','
 
     def get_transformation(self, *args, **kwargs):
-        if kwargs['assay_number']:  # todo проверить как работает, вроде уже устранил ошибку
+        if kwargs['assay_number']:
             return '(select if(count(t.result)>1, ' \
                    f'{f"{args[2]}, {args[1]}" if len(args) == 3 else f"{args[1]}, t.result"}) from(' + \
                    ' union '.join([f'select distinct {args[0]}_{assay_number} as result'

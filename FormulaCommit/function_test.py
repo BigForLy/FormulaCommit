@@ -76,7 +76,7 @@ class CheckResultTest(unittest.TestCase):
 class CheckFormulaIFResultTest(unittest.TestCase):
 
     @profile(precision=4)
-    def test_ResultFind_Sqlite_IF1_equals(self):
+    def test_Sqlite_IF1_v1(self):
         data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
                 StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
                 StringField(symbol="@exp", formula='if(@t_1 = 1, 1,  if (@t_1 = 2, 2 , "Enother"))', value="500",
@@ -90,7 +90,7 @@ class CheckFormulaIFResultTest(unittest.TestCase):
             "Неверное решение ResultOnly 1 param Sqlite"
 
     @profile(precision=4)
-    def test_ResultFind_Sqlite_IF1_not_equals(self):
+    def test_Sqlite_IF1_v2(self):
         data = [StringField(symbol="@t", formula="", value="Привет1", definition_number="1", primary_key="1"),
                 StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
                 StringField(symbol="@exp", formula='if(@t_1 = "Привет1", "1",  if (@t_1 = 2, 2 , "Enother"))',
@@ -104,7 +104,7 @@ class CheckFormulaIFResultTest(unittest.TestCase):
             "Неверное решение ResultOnly 1 param Sqlite"
 
     @profile(precision=4)
-    def test_ResultFind_Sqlite_IF2(self):
+    def test_Sqlite_IF2_v1(self):
         data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
                 StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
                 StringField(symbol="@exp", formula='if    (@t_1 = 1, 1, "Enother")', value="500",
@@ -115,6 +115,35 @@ class CheckFormulaIFResultTest(unittest.TestCase):
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
         assert result == {'1': 'Привет', '2': 'Привет', '3': 'Enother'}, \
+            "Неверное решение ResultOnly 1 param Sqlite"
+
+    @profile(precision=4)
+    def test_Sqlite_IF2_v1(self):
+        data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='if    (@t_1 = "Привет", "1", "Enother")', value="500",
+                            definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет', '2': 'Привет', '3': '1'}, \
+            "Неверное решение ResultOnly 1 param Sqlite"
+
+    @profile(precision=4)
+    def test_Sqlite_IF_ResultOnly_v1(self):
+        data = [StringField(symbol="@t", formula="", value="Привет", definition_number="1", primary_key="1"),
+                StringField(symbol="@t", formula="", value="Привет", definition_number="2", primary_key="2"),
+                StringField(symbol="@exp", formula='if(only(@t, "Разногласие по параметрам") = "Привет",'
+                                                   ' "1", "Enother")', value="500",
+                            definition_number="1", primary_key="3")
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Привет', '2': 'Привет', '3': '1'}, \
             "Неверное решение ResultOnly 1 param Sqlite"
 
 
