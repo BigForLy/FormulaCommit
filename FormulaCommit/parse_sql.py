@@ -122,9 +122,7 @@ class ParseSqlManager(ABC):
             else:
                 parser_item.stack.append(token)
         assert len(stack_list) == 1
-        result = list(self.__unpacking(stack_list[0].stack))
-        return result
-        # return stack_list[0].stack[0]
+        return list(self.__unpacking(stack_list[0].stack))
 
     def __unpacking(self, item):
         if isinstance(item, list):
@@ -153,7 +151,7 @@ class ParseSqlManager(ABC):
                     if isinstance(item, list):
                         item = list(self.__update_func_param(item, definition_number, number_field_by_symbol))[0]
                     param.append(item)
-                # if number_field_by_symbol.get(param[0]):
+                # if number_field_by_symbol.get(param[0]):  #todo
                 func_result = current_func.get_transformation(*param,
                                                               assay_number=number_field_by_symbol.get(param[0]),
                                                               formula_name=x)
