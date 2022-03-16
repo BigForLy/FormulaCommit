@@ -234,3 +234,74 @@ class CheckFormulaOnlyResultTest(unittest.TestCase):
         print('Функция целиком: ', bar - foo)
         assert result == {'1': 'Привет', '2': 'Привет1', '3': 'Разногласие по параметрам'}, \
             "Неверное решение ResultOnly 1 param Sqlite"
+
+
+class CheckFormula10ToDegreeTest(unittest.TestCase):
+
+    @profile(precision=4)
+    def test_Sqlite_ten_to_degree_v1(self):
+        data = [StringField(symbol="@t", value=0.001000,
+                            primary_key="1", ten_to_degree=True)]
+
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print(result)
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': '1.0*10^-3'}, \
+            "Неверное решение 10ToDegree Sqlite"
+
+    @profile(precision=4)
+    def test_Sqlite_ten_to_degree_v2(self):
+        data = [StringField(symbol="@t", value=0.001001,
+                            primary_key="1", ten_to_degree=True)]
+
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print(result)
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': '1.001*10^-3'}, \
+            "Неверное решение 10ToDegree Sqlite"
+
+    @profile(precision=4)
+    def test_Sqlite_ten_to_degree_v3(self):
+        data = [StringField(symbol="@t", value=1001,
+                            primary_key="1", ten_to_degree=True)]
+
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print(result)
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': '1.001*10^3'}, \
+            "Неверное решение 10ToDegree Sqlite"
+
+
+class CheckFormulaRoundWithZeroTest(unittest.TestCase):
+
+    @profile(precision=4)
+    def test_Sqlite_round_with_zeros_v1(self):
+        data = [StringField(symbol="@t", value=0.001, round_to=6, round_with_zeros=True,
+                            primary_key="1")]
+
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print(result)
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': '0.001000'}, \
+            "Неверное решение RoundWithZero Sqlite"
+
+    @profile(precision=4)
+    def test_Sqlite_round_with_zeros_v2(self):
+        data = [StringField(symbol="@t", value=0.001, round_to=6, round_with_zeros=True,
+                            primary_key="1")]
+
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print(result)
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': '0.001000'}, \
+            "Неверное решение RoundWithZero Sqlite"

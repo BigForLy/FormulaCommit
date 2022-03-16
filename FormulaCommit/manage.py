@@ -5,18 +5,6 @@ from FormulaCommit.parse_sql import ParserMySQLFactory, ParserSqliteFactory
 from FormulaCommit.session_manager import MySQLCalculateFactory, SqliteCalculatorUsingMemoryFactory
 
 
-#
-# @staticmethod
-# def __to_fixed_range(number, digit=0):
-#     """
-#     Округление перед выводом пользователю, позволяет дополнить нулями значение
-#     Использует округление в большую сторону, применять для проставления нулей
-#     :param number: объект для округления
-#     :param digit: количество знаков после запятой
-#     :return: значение с определенным количеством знаков после запятой
-#     """
-#     return f"{number:.{digit}f}"
-
 class AbstractCalculationMethod(ABC):
     """
     Абстрактный класс расчетного метода
