@@ -6,6 +6,17 @@ from abc import ABC, abstractmethod
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+
+# function StrToFloatLocalTrue(const s: string): Boolean;
+# var
+#   stringS: string;
+# begin
+#   stringS := StringReplace(s, '.', string(FormatSettings.DecimalSeparator), []);
+#   stringS := StringReplace(stringS, ',', string(FormatSettings.DecimalSeparator), []);
+#   result:=(StrToFloatDef(stringS, -123700.321007) <> -123700.321007);
+# end;
+
+
 # foo = datetime.datetime.now()
 # sqlite_connection = sqlite3.connect(":memory:")
 #
@@ -25,15 +36,15 @@ from sqlalchemy.orm import sessionmaker
 # print(bar - foo)
 
 
-class Calculator(ABC):
+class Connection(ABC):
     @abstractmethod
-    def calculation(self, calc_string, select_string) -> dict:
+    def calculator(self, calc_string, select_string) -> dict:
         pass
 
 
-class MySQLCalculator(Calculator):
+class MySQLConnection(Connection):
 
-    def calculation(self, calc_string, select_string) -> dict:
+    def calculator(self, calc_string, select_string) -> dict:
         def test_connection():
             db = "mysql://root:3kmzghj3z@localhost:3306/lims?charset=utf8"
             engine = create_engine(
@@ -58,9 +69,9 @@ class MySQLCalculator(Calculator):
         return dataset[0]._mapping
 
 
-class SqliteCalculatorMemory(Calculator):
+class SqliteConnectionMemory(Connection):
 
-    def calculation(self, calc_string, select_string) -> dict:
+    def calculator(self, calc_string, select_string) -> dict:
         foo = datetime.datetime.now()
 
         with sqlite3.connect(":memory:") as sqlite_connection:
@@ -76,9 +87,9 @@ class SqliteCalculatorMemory(Calculator):
         return data_result
 
 
-class SqliteCalculatorDB(Calculator):
+class SqliteConnectionDB(Connection):
 
-    def calculation(self, calc_string, select_string) -> dict:
+    def calculator(self, calc_string, select_string) -> dict:
         foo = datetime.datetime.now()
 
         sqlite_connection = sqlite3.connect("formula_commit.db")
@@ -93,26 +104,29 @@ class SqliteCalculatorDB(Calculator):
         return p
 
 
-class AbstractCalculationPlatformFactory(ABC):
+class AbstractConnectionFactory(ABC):
 
     @abstractmethod
-    def calculator(self) -> Calculator:
+    def connect(self) -> Connection:
         pass
 
 
-class MySQLCalculateFactory(AbstractCalculationPlatformFactory):
+class MySQLConnectionFactory(AbstractConnectionFactory):
 
-    def calculator(self) -> Calculator:
-        return MySQLCalculator()
-
-
-class SqliteCalculatorUsingMemoryFactory(AbstractCalculationPlatformFactory):
-
-    def calculator(self) -> Calculator:
-        return SqliteCalculatorMemory()
+    def connect(self) -> Connection:
+        return MySQLConnection()
 
 
-class SqliteDBFactory(AbstractCalculationPlatformFactory):
+class SqliteConnectionUsingMemoryFactory(AbstractConnectionFactory):
 
-    def calculator(self) -> Calculator:
-        return SqliteCalculatorDB()
+    def connect(self) -> Connection:
+        return SqliteConnectionMemory()
+
+
+class SqliteConnectionDBFactory(AbstractConnectionFactory):
+
+    def connect(self) -> Connection:
+        return SqliteConnectionDB()
+
+
+

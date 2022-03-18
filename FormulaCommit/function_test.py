@@ -2,7 +2,8 @@ import datetime
 import unittest
 from memory_profiler import profile
 from FormulaCommit.fields import IntegerField, StringField, BoolField
-from FormulaCommit.manage import FormulaCalculation, CalculationFactoryMySql, CalculationFactorySqlite
+from FormulaCommit.manage import FormulaCalculation
+from FormulaCommit.calculation import CalculationFactoryMySql, CalculationFactorySqlite, CalculationFactorySqlite_v2
 
 
 class CheckResultTest(unittest.TestCase):
