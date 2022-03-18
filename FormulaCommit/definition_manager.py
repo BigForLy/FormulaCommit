@@ -1,3 +1,4 @@
+import graphlib
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
@@ -59,6 +60,16 @@ class DefinitionManager(ABC):
                     current_field.calc()
                 result.update({current_field._primary_key: current_field.value})
         return result
+
+    def calculation_graph_for_data(self, data: list):
+        for current_field in data:
+            self.add(current_field)
+
+        self.update_data_for_calculating()
+
+        graph = self.all_field_dependencies_from_formula_symbol
+
+        return tuple(graphlib.TopologicalSorter(graph).static_order())
 
 
 class DefinitionManagerMySql(DefinitionManager):

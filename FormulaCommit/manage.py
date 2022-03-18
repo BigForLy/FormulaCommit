@@ -1,92 +1,6 @@
 import graphlib
-from abc import abstractmethod, ABC
-from FormulaCommit.definition_manager import DefinitionFactory, DefinitionFactoryMysql, DefinitionFactorySqlite
-from FormulaCommit.parse_sql import ParserMySQLFactory, ParserSqliteFactory
-from FormulaCommit.session_manager import MySQLCalculateFactory, SqliteCalculatorUsingMemoryFactory
 
-
-class AbstractCalculationMethod(ABC):
-    """
-    Абстрактный класс расчетного метода
-
-    Methods
-    -------
-    calc_result
-    """
-
-    @abstractmethod
-    def calc_result(self, symbol_and_calculate_item_list) -> dict:
-        """
-        Вычисление результата, включает парсер параметров и расчет значений
-        :param symbol_and_calculate_item_list:
-        :return:
-        """
-        pass
-
-
-class CalculationMethodForMySql(AbstractCalculationMethod):
-
-    def calc_result(self, symbol_and_calculate_item_list) -> dict:
-        parser = ParserMySQLFactory().parser()
-        calc_string, select_string = parser.parse(symbol_and_calculate_item_list)
-        calculator = MySQLCalculateFactory().calculator()
-        dataset_result = calculator.calculation(calc_string, select_string)
-        return dataset_result
-
-
-class CalculationMethodForSqlite(AbstractCalculationMethod):
-
-    def calc_result(self, symbol_and_calculate_item_list) -> dict:
-        parser = ParserSqliteFactory().parser()
-        calc_string, select_string = parser.parse(symbol_and_calculate_item_list)
-        calculator = SqliteCalculatorUsingMemoryFactory().calculator()
-        dataset_result = calculator.calculation(calc_string, select_string)
-        return dataset_result
-
-
-class AbstractCalculationFactory(ABC):
-    """
-    Фабрика расчетного менеджера
-
-    Methods
-    -------
-    calculation_method
-    definition_manager
-    """
-
-    @abstractmethod
-    def calculation_method(self) -> AbstractCalculationMethod:
-        """
-
-        :return: экземпляр класса расчетного метода AbstractCalculationMethod
-        """
-        pass
-
-    @abstractmethod
-    def definition_manager(self) -> DefinitionFactory:
-        """
-
-        :return: экземпляр класса менеджера определений AbstractDefinition
-        """
-        pass
-
-
-class CalculationFactoryMySql(AbstractCalculationFactory):
-
-    def calculation_method(self) -> AbstractCalculationMethod:
-        return CalculationMethodForMySql()
-
-    def definition_manager(self) -> DefinitionFactory:
-        return DefinitionFactoryMysql()
-
-
-class CalculationFactorySqlite(AbstractCalculationFactory):
-
-    def calculation_method(self) -> AbstractCalculationMethod:
-        return CalculationMethodForSqlite()
-
-    def definition_manager(self) -> DefinitionFactory:
-        return DefinitionFactorySqlite()
+from calculation import AbstractCalculationFactory
 
 
 class FormulaCalculation:  # general class
@@ -103,11 +17,8 @@ class FormulaCalculation:  # general class
         расчет графа и вычисление результата
         :return: словарь результатов {ключ1: значение1, ключ2: значение2}
         """
-        self._prepare_data_for_calculation()
 
-        graph = self._collects_data_for_graph()
-
-        calculated_graph = self._calculated_graph(graph)
+        calculated_graph = self.__definition_manager.calculation_graph_for_data(self.__data)  # todo некорректно вынесено
 
         symbol_and_calculate_item_list = self._collects_the_correct_sequence_of_formulas(calculated_graph)
 
