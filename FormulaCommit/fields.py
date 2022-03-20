@@ -194,7 +194,7 @@ class StringField(AbstractField):
         self.cast_to_original_type_value()
         for component in self._calc_component:
             component().accept(self)
-        self._value = str(self._value) if self._value else ''
+        self._value = str(self._value) if self._value or self._value == 0 else ''
 
     def cast_to_original_type_value(self):
         if not self.formula or self._value_only:

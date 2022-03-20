@@ -29,7 +29,7 @@ class DefinitionManager(ABC):
 
     def get_formula_by_symbol(self, symbol):
         return self._parser_manager.parameter_for_calculating_the_result(current_field=
-                                                                          self._symbols_and_field[symbol])
+                                                                         self._symbols_and_field[symbol])
 
     def get_field_by_symbol(self, symbol):
         return self._symbols_and_field.get(symbol)

@@ -62,10 +62,10 @@ class ParseSqlManager(ABC):
         :type definition_number: int
         :return: последовательный список параметров формулы для расчета в виде генератора
         """
-        stack = self.__separation_into_all_param(parsed_formula)
-        return self.__update_func_param(stack, definition_number, number_field_by_symbol)
+        stack = self.__separation_into_all_param(parsed_formula, definition_number, number_field_by_symbol)
+        return stack
 
-    def __separation_into_all_param(self, parsed_formula):
+    def __separation_into_all_param(self, parsed_formula, definition_number, number_field_by_symbol):
         """
         Преобразует список элементов изначальной формулы в новый список удобочитаемых и используемых для функций
         элементов
@@ -73,20 +73,23 @@ class ParseSqlManager(ABC):
         :type parsed_formula: generator
         :return: обновленный список элементов используемый для функций и расчета
         """
-        stack_list: list[ParserItem] = [ParserItem(None, [])]
+        stack_list: list[ParserItem] = [ParserItem(None, [], [], '', '')]
         parser_item = stack_list[-1]
         for token in parsed_formula:
             if token in self._func:
-                stack_list.append(ParserItem(self._func[token], []))
+                stack_list.append(ParserItem(self._func[token], [], [], token, ''))
                 parser_item = stack_list[-1]
-                parser_item.stack.append(token)
             elif token == ")":
+                parser_item.open_bracket -= 1
+                if parser_item.open_bracket != 0:
+                    parser_item.stack.append(token)
+                    continue
                 if parser_item.is_formula:
                     ready_params_for_formula = []
                     temporary_params = []
                     while parser_item.stack:
                         x = parser_item.stack.pop()
-                        if x == "(":
+                        if x == "(" and not parser_item.stack:
                             if temporary_params:
                                 foo = ''.join(temporary_params[::-1])
                                 temporary_params.clear()
@@ -98,40 +101,37 @@ class ParseSqlManager(ABC):
                             if foo.replace(' ', ''):
                                 ready_params_for_formula.append(foo)
                             ready_params_for_formula.append(parser_item.is_formula.delimiter)
-                        elif type(x) is list:
+                        elif '@' in x and x in number_field_by_symbol:
                             if temporary_params:
                                 foo = ''.join(temporary_params[::-1])
                                 temporary_params.clear()
                                 ready_params_for_formula.append(foo)
                             ready_params_for_formula.append(x)
-                        elif '@' in x:
-                            if temporary_params:
-                                foo = ''.join(temporary_params[::-1])
-                                temporary_params.clear()
-                                ready_params_for_formula.append(foo)
-                            ready_params_for_formula.append(x)
+                            parser_item.params.append(x)
                         else:
                             temporary_params.append(x)
                     if temporary_params:
                         foo = ''.join(temporary_params[::-1])
                         temporary_params.clear()
                         ready_params_for_formula.append(foo)
-                    parser_item.is_formula.count_param = len(ready_params_for_formula)
                     parser_item.stack += ready_params_for_formula[::-1]
                     last_parser_item = stack_list.pop()
                     parser_item = stack_list[-1]
-                    parser_item.stack.append(last_parser_item.stack[::-1])
+                    last_parser_item.calc(definition_number, number_field_by_symbol)
+                    parser_item.stack.append(last_parser_item.result)
                 else:
                     parser_item.stack.append(token)
-                    parser_item.stack = parser_item.stack[::-1]
             elif token == "(":
+                parser_item.open_bracket += 1
                 parser_item.stack.append(token)
-            elif token == " " and parser_item.is_formula and len(parser_item.stack) == 1:
+            elif token == " " and parser_item.is_formula and len(parser_item.stack) == 0:
                 pass
             else:
                 parser_item.stack.append(token)
         assert len(stack_list) == 1
-        return list(self.__unpacking(stack_list[0].stack))
+        parser_item.calc(definition_number, number_field_by_symbol)
+        return parser_item.result
+        # return list(self.__unpacking(stack_list[0].stack))
 
     def __unpacking(self, item):
         if isinstance(item, list):
@@ -150,8 +150,16 @@ class ParseSqlManager(ABC):
         :type definition_number: int
         :return: последовательный список параметров формулы для расчета в виде генератора
         """
+        if isinstance(stack, ParserItem) and stack.is_formula:
+            current_func = stack.is_formula
+            func_result = current_func.get_transformation(*stack.stack,
+                                                          assay_number=number_field_by_symbol.get(stack.params[0]),
+                                                          formula_name=stack.formula_name)
+            yield func_result
         while stack:
             x = stack.pop()
+            if isinstance(x, ParserItem):
+                yield list(self.__update_func_param(x, definition_number, number_field_by_symbol))[0]
             if x in self._func:
                 param = []
                 current_func = self._func[x]
@@ -210,6 +218,28 @@ class CalculateItem:
 class ParserItem:
     is_formula: AbstractFormula | None
     stack: list
+    params: list
+    formula_name: str
+    result: str
+    open_bracket: int = 0
+        # todo здесь можно указывать кавычки для параметра
+    def calc(self, definition_number, number_field_by_symbol):
+        if self.is_formula:
+            self.result = self.is_formula.get_transformation(*self.stack,
+                                                         definition_number=definition_number,
+                                                         formula_name=self.formula_name,
+                                                         number_field_by_symbol=number_field_by_symbol)
+        else:
+            params = []
+            tmp_params = []
+            for token in self.stack:
+                if '@' in token and token in number_field_by_symbol:
+                    tmp_params.append(f'{token}_{definition_number}')
+                else:
+                    tmp_params.append(token)
+            if tmp_params:
+                params.append(''.join(tmp_params))
+            self.result = ''.join(params)
 
 
 class ParseMySQLManager(ParseSqlManager):
