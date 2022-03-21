@@ -15,10 +15,6 @@ class Component(ABC):
 
         pass
 
-    @abstractmethod
-    def calc(self, value) -> None:
-        pass
-
 
 class ConcreteComponentTenToDegree(Component):
     """
@@ -28,7 +24,8 @@ class ConcreteComponentTenToDegree(Component):
     def accept(self, visitor) -> None:
         visitor.visit_concrete_component_give_value(self)
 
-    def calc(self, value) -> str:
+    @staticmethod
+    def calc(value) -> str:
         if isinstance(value, float | int):
             exponential = "{:e}".format(value)
             exponential_list = exponential.split('e')
@@ -44,10 +41,24 @@ class ConcreteComponentRoundToSignificantDigits(Component):
     def accept(self, visitor) -> None:
         visitor.visit_concrete_component_give_value(self)
 
-    def calc(self, value) -> float | str:
+    @staticmethod
+    def calc(value) -> float | str:
         if isinstance(value, float):
             return float(value)
         return value
+
+
+class ConcreteComponentRoundTo(Component):
+    """
+    округление
+    """
+
+    def accept(self, visitor) -> None:
+        visitor.visit_concrete_component_give_formula_and_round(self)
+
+    @staticmethod
+    def calc(formula, digits=0) -> str:
+        return f'(round({formula}, {abs(digits)}))'
 
 
 class ConcreteComponentRoundWithZero(Component):
@@ -58,7 +69,8 @@ class ConcreteComponentRoundWithZero(Component):
     def accept(self, visitor) -> None:
         visitor.visit_concrete_component_give_value_and_round(self)
 
-    def calc(self, value, digit=0) -> str:
+    @staticmethod
+    def calc(value, digit=0) -> str:
         if isinstance(value, float):
             return f"{value:.{digit}f}"
         return value

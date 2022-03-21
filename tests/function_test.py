@@ -267,7 +267,7 @@ class CheckFormulaOnlyResultTest(unittest.TestCase):
 
 class CheckFormula10ToDegreeTest(unittest.TestCase):
 
-    @profile(precision=4)
+    # @profile(precision=4)
     def test_Sqlite_ten_to_degree_v1(self):
         data = [StringField(symbol="@t", value=0.001000,
                             primary_key="1", ten_to_degree=True)]
@@ -375,4 +375,20 @@ class CheckFormulaRoundToSignificantDigits(unittest.TestCase):
         print(result)
         print('Функция целиком: ', bar - foo)
         assert result == {'1': '0.000201'}, \
+            "Неверное решение RoundWithZero Sqlite"
+
+
+class CheckFormulaRoundTo(unittest.TestCase):
+
+    @profile(precision=4)
+    def test_Sqlite_round_to_v1(self):
+        data = [StringField(symbol="@t", value=0.0042, round_to_significant_digits=True, round_to=-3,
+                            primary_key="1")]
+
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print(result)
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': '0.004'}, \
             "Неверное решение RoundWithZero Sqlite"

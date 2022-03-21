@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from FormulaCommit.tools import ConcreteComponentTenToDegree, ConcreteComponentRoundToSignificantDigits, \
-    ConcreteComponentRoundWithZero
+    ConcreteComponentRoundWithZero, ConcreteComponentRoundTo
 
 
 class AbstractField(ABC):
@@ -39,12 +39,16 @@ class AbstractField(ABC):
         :attribute _type_value: тип введенного значения
         """
         self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}') if symbol else None
-        self._formula = FormulaItem(formula, set())
+        self._formula = FormulaItem(formula, set(), f'"{symbol}_{definition_number}"')
         self._value = None
         self._value_only = False
         self._definition_number = definition_number
         self._primary_key = primary_key
+        self._calc_component_before = []
+        if round_to:
+            self._calc_component_before.append(ConcreteComponentRoundTo)
         self._calc_component = []
+        self._round_to = round_to
         if ten_to_degree:
             self._calc_component.append(ConcreteComponentTenToDegree)
         self._round_to = round_to
@@ -119,11 +123,24 @@ class AbstractField(ABC):
     def calc(self):
         pass
 
+    def before_update_component(self):
+        for component in self._calc_component_before:
+            component().accept(self)
+
+    def after_update_component(self):
+        for component in self._calc_component:
+            component().accept(self)
+
     def create_symbol(self, symbol):
         self._symbol = SymbolItem(symbol, f'{symbol}_{self._definition_number}', True)
+        self._formula.formula_update_value_component = f'"{symbol}_{self._definition_number}"'
 
     def visit_concrete_component_give_value(self, element):
         self._value = element.calc(self._value)
+
+    def visit_concrete_component_give_formula_and_round(self, element):
+        self._formula.formula_update_value_component = element.calc(self._formula.formula_update_value_component,
+                                                                    self._round_to)
 
     def visit_concrete_component_give_value_and_round(self, element):
         self._value = element.calc(self._value, self._round_to)
@@ -170,7 +187,7 @@ class StringField(AbstractField):
                  definition_number=0,
                  primary_key,
                  ten_to_degree=False,
-                 round_to=2,
+                 round_to=0,
                  round_to_another_column=None,
                  round_to_significant_digits=False,
                  round_with_zeros=False,
@@ -192,8 +209,7 @@ class StringField(AbstractField):
 
     def calc(self):
         self.cast_to_original_type_value()
-        for component in self._calc_component:
-            component().accept(self)
+        self.after_update_component()
         self._value = str(self._value) if self._value or self._value == 0 else ''
 
     def cast_to_original_type_value(self):
@@ -245,3 +261,4 @@ class SymbolItem:
 class FormulaItem:
     formula: str
     dependence: set
+    formula_update_value_component: str

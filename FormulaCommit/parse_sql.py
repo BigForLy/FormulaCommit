@@ -139,69 +139,16 @@ class ParseSqlManager(ABC):
             else:
                 return item
 
-    # def __update_func_param(self, stack, definition_number, number_field_by_symbol):
-    #     """
-    #     Добавляет номер определения для символьных обозначений полей в формуле,
-    #     преобразовывает функции в формулы для вычислений в MySQL
-    #     :param stack: стек элементов для расчета
-    #     :type stack: list
-    #     :param definition_number: номер определения поля рассчета
-    #     :type definition_number: int
-    #     :return: последовательный список параметров формулы для расчета в виде генератора
-    #     """
-    #     if isinstance(stack, ParserItem) and stack.is_formula:
-    #         current_func = stack.is_formula
-    #         func_result = current_func.get_transformation(*stack.stack,
-    #                                                       assay_number=number_field_by_symbol.get(stack.params[0]),
-    #                                                       formula_name=stack.formula_name)
-    #         yield func_result
-    #     while stack:
-    #         x = stack.pop()
-    #         if isinstance(x, ParserItem):
-    #             yield list(self.__update_func_param(x, definition_number, number_field_by_symbol))[0]
-    #         if x in self._func:
-    #             param = []
-    #             current_func = self._func[x]
-    #             for i in range(current_func.count_param):
-    #                 item = stack.pop()
-    #                 if isinstance(item, list):
-    #                     item = list(self.__update_func_param(item, definition_number, number_field_by_symbol))[0]
-    #                 param.append(item)
-    #             param = self.__update_formula_param_by_delimiter(param, current_func.delimiter)
-    #             func_result = current_func.get_transformation(*param,
-    #                                                           assay_number=number_field_by_symbol.get(param[0]),
-    #                                                           formula_name=x)
-    #             yield func_result
-    #         else:
-    #             if '@' in x:
-    #                 if '_' in x and x not in number_field_by_symbol:
-    #                     now_x = x
-    #                 else:
-    #                     now_x = f'{x}_{definition_number}'
-    #                 yield now_x
-    #             else:
-    #                 yield x
-
-    # def __update_formula_param_by_delimiter(self, all_param, delimiter):
-    #     param_delimiter = [[]]
-    #     actual_param = param_delimiter[0]
-    #     for i in all_param:
-    #         if i == delimiter:
-    #             param_delimiter.append([])
-    #             actual_param = param_delimiter[len(param_delimiter) - 1]
-    #         else:
-    #             actual_param.append(i)
-    #     return [''.join(x) for x in param_delimiter]
-
     @staticmethod
     def parameter_for_calculating_the_result(*, current_field):
         term = current_field.formula if current_field.formula and not current_field._value_only else \
             f"\"{str(current_field._value)}\""
+        current_field.before_update_component()
         return CalculateItem(current_field.symbol_item.symbol_and_definition,
                              current_field.formula is not None and current_field.formula != '' and
                              not current_field._value_only,
-                             f'set {current_field.symbol_item.symbol_and_definition}:={term};',
-                             f'({term})',
+                             f'{term}',
+                             current_field._formula.formula_update_value_component
                              )
 
 
@@ -209,8 +156,8 @@ class ParseSqlManager(ABC):
 class CalculateItem:
     symbol_and_definition: str
     is_formula: bool  # Если True то формула, если False то value
-    formula_old: str  # Формула для mysql
     formula: str  # переименовать
+    formula_and_component: str  # переименовать
 
 
 @dataclass
@@ -331,9 +278,12 @@ class ParserCalculationItemToExecuteStringSqlite(ParserCalculationItemToExecuteS
 
     def parse(self, symbol_and_calculate_item_list) -> (str, str):
         calc_item_formula = []
-        for _, item in symbol_and_calculate_item_list.items():
+        for key, item in symbol_and_calculate_item_list.items():
             calc_item_formula.append(
-                f'update variable set "{item.symbol_and_definition}"=(select {item.formula} from variable);')
+                f'update variable set "{key}"=(select {item.formula} from variable); '
+                f'update variable set "{key}"= (select case when cast(sum("{key}") '
+                f'as char) = "{key}" then {item.formula_and_component} '
+                f'else "{key}" end  from variable);')
         list_symbol_and_definition = list(map(lambda x: x[1].symbol_and_definition,
                                               symbol_and_calculate_item_list.items()))
         column_variable = '"' + '", "'.join(list_symbol_and_definition) + '"'
