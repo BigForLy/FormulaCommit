@@ -1,3 +1,4 @@
+import decimal
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -45,7 +46,7 @@ class AbstractField(ABC):
         self._definition_number = definition_number
         self._primary_key = primary_key
         self._calc_component_before = []
-        if round_to:
+        if round_to and round_to != '-':
             self._calc_component_before.append(ConcreteComponentRoundTo)
         self._calc_component = []
         self._round_to = round_to
@@ -123,6 +124,10 @@ class AbstractField(ABC):
     def calc(self):
         pass
 
+    @abstractmethod
+    def get_value_by_type(self):
+        pass
+
     def before_update_component(self):
         for component in self._calc_component_before:
             component().accept(self)
@@ -155,7 +160,7 @@ class IntegerField(AbstractField):
                  definition_number=0,
                  primary_key,
                  ten_to_degree=False,
-                 round_to=2,
+                 round_to='-',
                  round_to_another_column=None,
                  round_to_significant_digits=False,
                  round_with_zeros=False,
@@ -177,6 +182,9 @@ class IntegerField(AbstractField):
     def calc(self):
         self.after_update_component()
         self._value = float(eval(str(self._value))) if self._value else ''  # Расчет, округление
+
+    def get_value_by_type(self):
+        return decimal.Decimal(str(self._value))
 
 
 class StringField(AbstractField):
@@ -212,6 +220,9 @@ class StringField(AbstractField):
         self.cast_to_original_type_value()
         self.after_update_component()
         self._value = str(self._value) if self._value or self._value == 0 else ''
+
+    def get_value_by_type(self):
+        return f'"{self._value}"'
 
     def cast_to_original_type_value(self):
         if not self.formula or self._value_only:
@@ -249,6 +260,9 @@ class BoolField(AbstractField):
 
     def calc(self):
         self._value = True if self._value == 'True' or self._value == '1' or self._value == 1 else False
+
+    def get_value_by_type(self):
+        return self._value
 
 
 @dataclass

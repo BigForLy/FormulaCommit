@@ -1,6 +1,6 @@
 import graphlib
 
-from FormulaCommit.calculation import AbstractCalculationFactory
+from FormulaCommit.calculation.calculation import AbstractCalculationFactory
 
 
 class FormulaCalculation:  # general class

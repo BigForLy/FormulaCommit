@@ -2,8 +2,6 @@ import graphlib
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
-from FormulaCommit.parse_sql import ParseMySQLManager, ParseSqliteManager
-
 
 class DefinitionManager(ABC):
 
@@ -72,20 +70,6 @@ class DefinitionManager(ABC):
         return tuple(graphlib.TopologicalSorter(graph).static_order())
 
 
-class DefinitionManagerMySql(DefinitionManager):
-
-    def __init__(self):
-        super().__init__()
-        self._parser_manager = ParseMySQLManager()
-
-
-class DefinitionManagerSqlite(DefinitionManager):
-
-    def __init__(self):
-        super().__init__()
-        self._parser_manager = ParseSqliteManager()
-
-
 class DefinitionFactory(ABC):
     """
     Фабрика менеджера определений
@@ -101,18 +85,6 @@ class DefinitionFactory(ABC):
         :return: экземпляр класса DefinitionManager
         """
         pass
-
-
-class DefinitionFactoryMysql(DefinitionFactory):
-
-    def manager(self) -> DefinitionManager:
-        return DefinitionManagerMySql()
-
-
-class DefinitionFactorySqlite(DefinitionFactory):
-
-    def manager(self) -> DefinitionManager:
-        return DefinitionManagerSqlite()
 
 
 class Definition:
