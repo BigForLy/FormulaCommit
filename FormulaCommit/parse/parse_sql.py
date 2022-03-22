@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
-from FormulaCommit.formula_mysql import AbstractFormula
+from FormulaCommit.formula.formula import AbstractFormula
 
 
 class ParseSqlManager(ABC):

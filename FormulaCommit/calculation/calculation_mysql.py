@@ -1,5 +1,5 @@
 from FormulaCommit.calculation.calculation import AbstractCalculationMethod, AbstractCalculationFactory
-from FormulaCommit.db_module import MySQLConnectionFactory
+from FormulaCommit.db_module.db_mysql import MySQLConnectionFactory
 from FormulaCommit.definition.definition_manager import DefinitionFactory
 from FormulaCommit.definition.definition_mysql import DefinitionFactoryMysql
 from FormulaCommit.parse.parse_mysql import ParserMySQLFactory

@@ -1,4 +1,4 @@
-from FormulaCommit.formula_mysql import FormulaOnlySqlite, AggregateSqliteFormula, FormulaIFSqlite
+from FormulaCommit.formula.formula_sqlite import AggregateSqliteFormula, FormulaOnlySqlite, FormulaIFSqlite
 from FormulaCommit.parse.parse_sql import ParseSqlManager, CalculateItem, ParserCalculationItemToExecuteString, \
     AbstractParserFactory
 

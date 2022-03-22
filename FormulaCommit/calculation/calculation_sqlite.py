@@ -1,5 +1,5 @@
 from FormulaCommit.calculation.calculation import AbstractCalculationMethod, AbstractCalculationFactory
-from FormulaCommit.db_module import SqliteConnectionUsingMemoryFactory
+from FormulaCommit.db_module.db_sqlite import SqliteConnectionUsingMemoryFactory
 from FormulaCommit.definition.definition_manager import DefinitionFactory
 from FormulaCommit.definition.definition_sqlite import DefinitionFactorySqlite
 from FormulaCommit.parse.parse_sqlite import ParserSqliteFactory
