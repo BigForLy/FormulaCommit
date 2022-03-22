@@ -39,7 +39,7 @@ class AbstractField(ABC):
         :attribute _type_value: тип введенного значения
         """
         self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}') if symbol else None
-        self._formula = FormulaItem(formula, set(), f'"{symbol}_{definition_number}"')
+        self._formula = FormulaItem(formula, set(), f'{symbol}_{definition_number}')
         self._value = None
         self._value_only = False
         self._definition_number = definition_number
@@ -133,7 +133,7 @@ class AbstractField(ABC):
 
     def create_symbol(self, symbol):
         self._symbol = SymbolItem(symbol, f'{symbol}_{self._definition_number}', True)
-        self._formula.formula_update_value_component = f'"{symbol}_{self._definition_number}"'
+        self._formula.formula_update_value_component = f'{symbol}_{self._definition_number}'
 
     def visit_concrete_component_give_value(self, element):
         self._value = element.calc(self._value)
@@ -175,6 +175,7 @@ class IntegerField(AbstractField):
                          **kwargs)
 
     def calc(self):
+        self.after_update_component()
         self._value = float(eval(str(self._value))) if self._value else ''  # Расчет, округление
 
 

@@ -3,6 +3,8 @@ import sqlite3
 # https://qna.habr.com/q/1066566
 # https://coderlessons.com/tutorials/bazy-dannykh/vyuchit-sqlite/sqlite-kratkoe-rukovodstvo
 from abc import ABC, abstractmethod
+from types import NoneType
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
@@ -74,7 +76,23 @@ class SqliteConnectionMemory(Connection):
     def calculator(self, calc_string, select_string) -> dict:
         foo = datetime.datetime.now()
 
+        def is_number(token):
+            if isinstance(token, int | float):
+                return True
+            elif isinstance(token, NoneType):
+                return False
+            else:
+                result = True
+                for s in token:
+                    if s in '1234567890.,':  # garbage
+                        continue
+                    else:
+                        result = False
+                        break
+                return result
+
         with sqlite3.connect(":memory:") as sqlite_connection:
+            sqlite_connection.create_function("is_number", 1, is_number)
             cursor = sqlite_connection.cursor()
             cursor.executescript(calc_string)
             data_result = cursor.execute(select_string).fetchone()
