@@ -11,32 +11,32 @@ class CheckResultPNDF14_1_2_3_95_97Test(unittest.TestCase):
     @profile(precision=4)
     def test_ResultFind_PNDF14_1_2_3_95_97(self):
         data = [
-            IntegerField(symbol="@ctr", round_to=-3, value="", rounding_with_zero=False, definition_number="1",
+            IntegerField(symbol="@ctr", round_to=-3, value="", round_with_zeros=False, definition_number="1",
                          primary_key="1"),
-            IntegerField(symbol="@vtr", round_to=-3, value="", rounding_with_zero=False, definition_number="1",
+            IntegerField(symbol="@vtr", round_to=-3, value="", round_with_zeros=False, definition_number="1",
                          primary_key="2"),
-            IntegerField(symbol="@v", round_to=-3, value="", rounding_with_zero=False, definition_number="1",
+            IntegerField(symbol="@v", round_to=-3, value="", round_with_zeros=False, definition_number="1",
                          primary_key="3"),
-            IntegerField(symbol="@qq", round_to=-3, value="", rounding_with_zero=False, definition_number="1",
+            IntegerField(symbol="@qq", round_to=-3, value="", round_with_zeros=False, definition_number="1",
                          primary_key="4"),
             BoolField(symbol="@check_ignore", value="False", definition_number="1", primary_key="5"),
             BoolField(symbol="@input_manual", value="True", definition_number="1", primary_key="6"),
-            IntegerField(symbol="@exp", round_to=-3, rounding_with_zero=False, definition_number="1",
+            IntegerField(symbol="@exp", round_to=-3, round_with_zeros=False, definition_number="1",
                          formula="if(@qq='Используется',1.25*40.08*1000*(@ctr*@vtr)/@v,if(@qq='Не используется',40.08*1000*(@ctr*@vtr)/@v,null))",
                          value=1,
                          primary_key="7"),
 
-            IntegerField(symbol="@ctr", round_to=-3, value="", rounding_with_zero=False, definition_number="2",
+            IntegerField(symbol="@ctr", round_to=-3, value="", round_with_zeros=False, definition_number="2",
                          primary_key="8"),
-            IntegerField(symbol="@vtr", round_to=-3, value="", rounding_with_zero=False, definition_number="2",
+            IntegerField(symbol="@vtr", round_to=-3, value="", round_with_zeros=False, definition_number="2",
                          primary_key="9"),
-            IntegerField(symbol="@v", round_to=-3, value="", rounding_with_zero=False, definition_number="2",
+            IntegerField(symbol="@v", round_to=-3, value="", round_with_zeros=False, definition_number="2",
                          primary_key="10"),
-            IntegerField(symbol="@qq", round_to=-3, value="", rounding_with_zero=False, definition_number="2",
+            IntegerField(symbol="@qq", round_to=-3, value="", round_with_zeros=False, definition_number="2",
                          primary_key="11"),
             BoolField(symbol="@check_ignore", value="False", definition_number="2", primary_key="12"),
             BoolField(symbol="@input_manual", value="True", definition_number="2", primary_key="13"),
-            IntegerField(symbol="@exp", round_to=-3, rounding_with_zero=False, definition_number="2",
+            IntegerField(symbol="@exp", round_to=-3, round_with_zeros=False, definition_number="2",
                          formula="if(@qq='Используется',1.25*40.08*1000*(@ctr*@vtr)/@v,if(@qq='Не используется',40.08*1000*(@ctr*@vtr)/@v,null))",
                          value=1,
                          primary_key="14"),
@@ -62,7 +62,6 @@ class CheckResultPNDF14_1_2_3_95_97Test(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        print(result)
         assert result == {'1': '', '2': '', '3': '', '4': '', '5': False, '6': True, '7': 1.0,
                           '8': '', '9': '', '10': '', '11': '', '12': False, '13': True,
                           '14': 1.0, '15': '0.25', '16': '1', '17': '22', '18': '0.0'}, \
@@ -72,7 +71,7 @@ class CheckResultPNDF14_1_2_3_95_97Test(unittest.TestCase):
 class CheckResultGost_17_2_4_06Test(unittest.TestCase):
 
     @profile(precision=4)
-    def test_ResultFind_gost_17_2_4_06(self):
+    def test_ResultFind_gost_17_2_4_06_v1(self):
         data = [IntegerField(symbol="@densityAir", formula="1.293", value="1.293", round_to=-3, definition_number="1",
                              primary_key="1"),
                 IntegerField(symbol="@absHumidity", round_to=-1, value="1.6", definition_number="1", primary_key="2"),
@@ -102,6 +101,58 @@ class CheckResultGost_17_2_4_06Test(unittest.TestCase):
                           '9': 1.292, '10': 1.203, '11': '19.48'}, \
             "Неверное решение ГОСТ 17.2.4.06-90"
 
+    @profile(precision=4)
+    def test_ResultFind_gost_17_2_4_06_v2(self):
+        data = [IntegerField(symbol="@v", formula="", value=20.25, round_to=-2, definition_number="1",
+                             primary_key="1"),
+                IntegerField(symbol="@pStat", round_to=-2, value=-1008, definition_number="1", primary_key="2"),
+                IntegerField(symbol="@pAtmo", round_to=-2, value=98.9, definition_number="1", primary_key="3"),
+                IntegerField(symbol="@tGas", round_to=-2, value=19.1, definition_number="1", primary_key="4"),
+                StringField(symbol="@sRectangle", round_to=-4,
+                            formula="(case when @flueLength>0 then REPLACE (round(CAST(@flueLength*@width/1000000 as DECIMAL(15,4)),4),'.',',') else REPLACE ('-','.',',')end)",
+                            value="-", definition_number="1", primary_key="5"),
+                IntegerField(symbol="@flueLength", round_to=-2,
+                             formula="", value="", definition_number="1", primary_key="6"),
+                StringField(symbol="@sRound", round_to=-4,
+                            formula="(case when @diameter>0 then REPLACE(round(CAST((3.14*(@diameter*@diameter))/(4000000)as DECIMAL(15,4)),4),'.',',')else REPLACE ('-','.',',')end)",
+                            value="0.1590", definition_number="1", primary_key="7"),
+                IntegerField(symbol="@x2", round_to=-5,
+                             formula="round(2.695*@x*(@pAtmo+@pStat/1000)/(273+@tGas),3)",
+                             value=2.908, definition_number="1", primary_key="8"),
+                BoolField(symbol="@input_manual", value="True", definition_number="1", primary_key="18"),
+                StringField(symbol="@x", round_to=-5,
+                            formula="(case when @sRectangle>0 then REPLACE (round((@v*@sRectangle),3),'.',',')else REPLACE (round((@v*@sRound),3),'.',',')end)",
+                            value="3.220", definition_number="1", primary_key="9"),
+                IntegerField(symbol="@d", formula="", value=470, round_to=-2, definition_number="1",
+                             primary_key="10"),
+                StringField(symbol="@diameter",
+                            formula="(case when @d>0 then REPLACE (@d-@h,'.',',')else REPLACE ('-','.',',')end)",
+                            value="450", round_to=-2, definition_number="1",
+                            primary_key="11"),
+                IntegerField(symbol="@width", formula="", value="", round_to=-2, definition_number="1",
+                             primary_key="12"),
+                IntegerField(symbol="@h", formula="", value=20, round_to=-2, definition_number="1",
+                             primary_key="13"),
+
+                StringField(symbol="@exp", formula="avg(@x)", value="", round_to=-3, round_with_zeros=True,
+                            primary_key="14"),
+                StringField(symbol="@abs_pogr", formula="max(@x)-min(@x)", round_to=-1, value="0,0",
+                            primary_key="15"),
+                StringField(symbol="@exp2", formula="avg(@x2)", value="", round_to=-3, primary_key="16"),
+                StringField(symbol="@abs_pogr2", formula="max(@x2)-min(@x2)", round_to=-1, value="0,0",
+                            primary_key="17"),
+
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        print(result)
+        assert result == {'1': 20.25, '2': -1008, '3': 98.9, '4': 19.1, '5': '-', '6': '', '7': '0.1590',
+                          '8': 2.908, '18': True, '9': '3.220', '10': 470.0, '11': '450', '12': '', '13': 20.0,
+                          '14': '3.220', '15': '0.0', '16': '', '17': ''}, \
+            "Неверное решение ГОСТ 17.2.4.06-90"
+
 
 class CheckResultTest(unittest.TestCase):
 
@@ -125,8 +176,7 @@ class CheckResultTest(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        print(result)
-        assert result == {1: 19.476097420679974123, 2: 6.0, 3: 25.476097420679974123}, "Неверное решение lower_number"
+        assert result == {1: 19.476097420679974, 2: 6.0, 3: 25.476097420679974123}, "Неверное решение lower_number"
 
 
 class CheckResultGost_2477_2014Test(unittest.TestCase):
@@ -154,7 +204,6 @@ class CheckResultGost_2477_2014Test(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        print(result)
         assert result == {'1': '2', '2': 'Да', '3': '1', '4': '1', '5': True, '6': False, '7': '', '8': 1.0,
                           '9': 1.0, '10': False, '11': False, '12': 100.0, '13': 100.0, '14': '100.0'}, \
             "Неверное решение Гост 2477-2014"

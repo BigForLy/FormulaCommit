@@ -49,7 +49,7 @@ class AbstractField(ABC):
         if round_to and round_to != '-':
             self._calc_component_before.append(ConcreteComponentRoundTo)
         self._calc_component = []
-        self._round_to = round_to
+        # self._round_to = round_to
         if ten_to_degree:
             self._calc_component.append(ConcreteComponentTenToDegree)
         self._round_to = round_to

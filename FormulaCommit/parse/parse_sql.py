@@ -40,7 +40,7 @@ class ParseSqlManager(ABC):
         """
         param = ''
         for s in formula_string:
-            if s in self.__OPERATORS or s in "( ,)":  # garbage
+            if s in self.__OPERATORS or s in "( ,<>=)":  # garbage
                 if param:
                     yield param
                 yield s

@@ -72,5 +72,5 @@ class ConcreteComponentRoundWithZero(Component):
     @staticmethod
     def calc(value, digit=0) -> str:
         if isinstance(value, float):
-            return f"{value:.{digit}f}"
+            return f"{value:.{abs(digit)}f}"
         return value
