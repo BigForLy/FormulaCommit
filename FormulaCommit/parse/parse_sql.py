@@ -75,8 +75,8 @@ class ParseSqlManager(ABC):
         stack_list: list[ParserItem] = [ParserItem(None, [], [], '', '')]
         parser_item = stack_list[-1]
         for token in parsed_formula:
-            if token in self._func:
-                stack_list.append(ParserItem(self._func[token], [], [], token, ''))
+            if token.lower() in self._func:
+                stack_list.append(ParserItem(self._func[token.lower()], [], [], token, ''))
                 parser_item = stack_list[-1]
             elif token == ")":
                 parser_item.open_bracket -= 1

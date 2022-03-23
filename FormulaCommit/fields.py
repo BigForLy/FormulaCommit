@@ -41,7 +41,7 @@ class AbstractField(ABC):
         """
         self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}') if symbol else None
         self._formula = FormulaItem(formula, set(), f'{symbol}_{definition_number}')
-        self._value = None
+        # self._value = None
         self._value_only = False
         self._definition_number = definition_number
         self._primary_key = primary_key
@@ -160,7 +160,7 @@ class IntegerField(AbstractField):
                  definition_number=0,
                  primary_key,
                  ten_to_degree=False,
-                 round_to='-',
+                 round_to=2,
                  round_to_another_column=None,
                  round_to_significant_digits=False,
                  round_with_zeros=False,
@@ -184,7 +184,8 @@ class IntegerField(AbstractField):
         self._value = float(eval(str(self._value))) if self._value else ''  # Расчет, округление
 
     def get_value_by_type(self):
-        return decimal.Decimal(str(self._value))
+        return f'"{self._value}"'
+        # return decimal.Decimal(str(self._value))
 
 
 class StringField(AbstractField):
@@ -196,7 +197,7 @@ class StringField(AbstractField):
                  definition_number=0,
                  primary_key,
                  ten_to_degree=False,
-                 round_to=0,
+                 round_to='-',
                  round_to_another_column=None,
                  round_to_significant_digits=False,
                  round_with_zeros=False,

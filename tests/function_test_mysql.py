@@ -6,6 +6,69 @@ from memory_profiler import profile
 from FormulaCommit import IntegerField, StringField, FormulaCalculation, CalculationFactoryMySql, BoolField
 
 
+class CheckResultPNDF14_1_2_3_95_97Test(unittest.TestCase):
+
+    @profile(precision=4)
+    def test_ResultFind_PNDF14_1_2_3_95_97(self):
+        data = [
+            IntegerField(symbol="@ctr", round_to=-3, value="", rounding_with_zero=False, definition_number="1",
+                         primary_key="1"),
+            IntegerField(symbol="@vtr", round_to=-3, value="", rounding_with_zero=False, definition_number="1",
+                         primary_key="2"),
+            IntegerField(symbol="@v", round_to=-3, value="", rounding_with_zero=False, definition_number="1",
+                         primary_key="3"),
+            IntegerField(symbol="@qq", round_to=-3, value="", rounding_with_zero=False, definition_number="1",
+                         primary_key="4"),
+            BoolField(symbol="@check_ignore", value="False", definition_number="1", primary_key="5"),
+            BoolField(symbol="@input_manual", value="True", definition_number="1", primary_key="6"),
+            IntegerField(symbol="@exp", round_to=-3, rounding_with_zero=False, definition_number="1",
+                         formula="if(@qq='Используется',1.25*40.08*1000*(@ctr*@vtr)/@v,if(@qq='Не используется',40.08*1000*(@ctr*@vtr)/@v,null))",
+                         value=1,
+                         primary_key="7"),
+
+            IntegerField(symbol="@ctr", round_to=-3, value="", rounding_with_zero=False, definition_number="2",
+                         primary_key="8"),
+            IntegerField(symbol="@vtr", round_to=-3, value="", rounding_with_zero=False, definition_number="2",
+                         primary_key="9"),
+            IntegerField(symbol="@v", round_to=-3, value="", rounding_with_zero=False, definition_number="2",
+                         primary_key="10"),
+            IntegerField(symbol="@qq", round_to=-3, value="", rounding_with_zero=False, definition_number="2",
+                         primary_key="11"),
+            BoolField(symbol="@check_ignore", value="False", definition_number="2", primary_key="12"),
+            BoolField(symbol="@input_manual", value="True", definition_number="2", primary_key="13"),
+            IntegerField(symbol="@exp", round_to=-3, rounding_with_zero=False, definition_number="2",
+                         formula="if(@qq='Используется',1.25*40.08*1000*(@ctr*@vtr)/@v,if(@qq='Не используется',40.08*1000*(@ctr*@vtr)/@v,null))",
+                         value=1,
+                         primary_key="14"),
+
+            StringField(symbol="@pogr",
+                        formula="if(avg(@exp)>=1 and avg(@exp)<=2,0.25*avg(@exp),if(avg(@exp)>2 and avg(@exp)<=10,0.15*avg(@exp),if(avg(@exp)>10 and avg(@exp)<=2000,0.11*avg(@exp),null)))",
+                        value="",
+                        primary_key="15"),
+            StringField(symbol="@r",
+                        formula="IF (avg(@exp)<1,'<1' ,IF (avg(@exp)>1000,'>1000',REPLACE(AVG(@exp),'.',',')))",
+                        value="1.0",
+                        primary_key="16"),
+            StringField(symbol="@povt",
+                        formula="if(avg(@exp)>=1 and avg(@exp)<=2,22,if(avg(@exp)>2 and avg(@exp)<=10,14,if(avg(@exp)>10 and avg(@exp)<=2000,6,null)))",
+                        value="22",
+                        primary_key="17"),
+            StringField(symbol="@abs_rash",
+                        formula="200*(max(@exp)-min(@exp))/(max(@exp)+min(@exp))",
+                        value="0",
+                        primary_key="18"),
+        ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        print(result)
+        assert result == {'1': '', '2': '', '3': '', '4': '', '5': False, '6': True, '7': 1.0,
+                          '8': '', '9': '', '10': '', '11': '', '12': False, '13': True,
+                          '14': 1.0, '15': '0.25', '16': '1', '17': '22', '18': '0.0'}, \
+            "Неверное решение ПНД Ф 14.1:2:3.95-97"
+
+
 class CheckResultGost_17_2_4_06Test(unittest.TestCase):
 
     @profile(precision=4)
@@ -91,6 +154,7 @@ class CheckResultGost_2477_2014Test(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
+        print(result)
         assert result == {'1': '2', '2': 'Да', '3': '1', '4': '1', '5': True, '6': False, '7': '', '8': 1.0,
                           '9': 1.0, '10': False, '11': False, '12': 100.0, '13': 100.0, '14': '100.0'}, \
             "Неверное решение Гост 2477-2014"
