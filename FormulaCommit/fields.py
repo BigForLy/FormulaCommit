@@ -41,7 +41,6 @@ class AbstractField(ABC):
         """
         self._symbol = SymbolItem(symbol, f'{symbol}_{definition_number}') if symbol else None
         self._formula = FormulaItem(formula, set(), f'{symbol}_{definition_number}')
-        # self._value = None
         self._value_only = False
         self._definition_number = definition_number
         self._primary_key = primary_key
@@ -49,7 +48,6 @@ class AbstractField(ABC):
         if round_to and round_to != '-':
             self._calc_component_before.append(ConcreteComponentRoundTo)
         self._calc_component = []
-        # self._round_to = round_to
         if ten_to_degree:
             self._calc_component.append(ConcreteComponentTenToDegree)
         self._round_to = round_to

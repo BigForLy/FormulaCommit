@@ -6,6 +6,162 @@ from memory_profiler import profile
 from FormulaCommit import IntegerField, StringField, FormulaCalculation, CalculationFactoryMySql, BoolField
 
 
+class CheckResultGostR58952_3_2020Test(unittest.TestCase):
+
+    @profile(precision=4)
+    def test_ResultFind_GostR58952_3_2020_v1(self):
+        data = [
+            IntegerField(symbol="@mvp", round_to=-4, value=1, definition_number="1",
+                         primary_key="1"),
+            IntegerField(symbol="@mp", round_to=-4, value=2, definition_number="1",
+                         formula_check="if(@mp<@mvp,\'\', \'Масса пластины должна быть больше массы пластины)\'",
+                         primary_key="2"),
+            IntegerField(symbol="@mep", round_to=-2, value=3, definition_number="1",
+                         formula_check="if(@mp<@mep,\'\', \'Масса пластины должна быть больше массы пластины)\'",
+                         primary_key="3"),
+            IntegerField(symbol="@exp", formula='((@mvp-@mp)/(@mep-@mp))*100', round_to=-2, value="",
+                         definition_number="1",
+                         primary_key="4"),
+            StringField(symbol="@r", formula='avg(@exp)', round_to=-2, value="Отсвутствуют", primary_key="5"),
+            StringField(symbol="@abs_rash", formula='max(@exp)-min(@exp)', round_to=-2, value="Отсвутствуют",
+                        primary_key="6")
+        ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 1, '2': 2, '3': 3, '4': -100, '5': -100, '6': 0}, \
+            "Неверное решение ГОСТ 3242-79"
+
+    @profile(precision=4)
+    def test_ResultFind_GostR58952_3_2020_v2(self):
+        data = [
+            IntegerField(symbol="@mvp", round_to=-4, value=3, definition_number="1",
+                         primary_key="1"),
+            IntegerField(symbol="@mp", round_to=-4, value=2, definition_number="1",
+                         formula_check="if(@mp<@mvp,\'\', \'Масса пластины должна быть больше массы пластины)\'",
+                         primary_key="2"),
+            IntegerField(symbol="@mep", round_to=-2, value=3, definition_number="1",
+                         formula_check="if(@mp<@mep,\'\', \'Масса пластины должна быть больше массы пластины)\'",
+                         primary_key="3"),
+            IntegerField(symbol="@exp", formula='((@mvp-@mp)/(@mep-@mp))*100', round_to=-2, value="",
+                         definition_number="1",
+                         primary_key="4"),
+            StringField(symbol="@r", formula='avg(@exp)', round_to=-2, value="Отсвутствуют", primary_key="5"),
+            StringField(symbol="@abs_rash", formula='max(@exp)-min(@exp)', round_to=-2, value="Отсвутствуют",
+                        primary_key="6")
+        ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 3, '2': 2, '3': 3, '4': 100, '5': 100, '6': 0}, \
+            "Неверное решение ГОСТ 3242-79"
+
+    @profile(precision=4)
+    def test_ResultFind_GostR58952_3_2020_v3(self):
+        data = [
+            IntegerField(symbol="@mvp", round_to=-4, value=3, definition_number="1",
+                         primary_key="1"),
+            IntegerField(symbol="@mp", round_to=-4, value=2, definition_number="1",
+                         formula_check="if(@mp<@mvp,\'\', \'Масса пластины должна быть больше массы пластины)\'",
+                         primary_key="2"),
+            IntegerField(symbol="@mep", round_to=-2, value=3, definition_number="1",
+                         formula_check="if(@mp<@mep,\'\', \'Масса пластины должна быть больше массы пластины)\'",
+                         primary_key="3"),
+            IntegerField(symbol="@exp", formula='((@mvp-@mp)/(@mep-@mp))*100', round_to=-2, value="",
+                         definition_number="1",
+                         primary_key="4"),
+
+            IntegerField(symbol="@mvp", round_to=-4, value=4, definition_number="2",
+                         primary_key="5"),
+            IntegerField(symbol="@mp", round_to=-4, value=2, definition_number="2",
+                         formula_check="if(@mp<@mvp,\'\', \'Масса пластины должна быть больше массы пластины)\'",
+                         primary_key="6"),
+            IntegerField(symbol="@mep", round_to=-2, value=3, definition_number="2",
+                         formula_check="if(@mp<@mep,\'\', \'Масса пластины должна быть больше массы пластины)\'",
+                         primary_key="7"),
+            IntegerField(symbol="@exp", formula='((@mvp-@mp)/(@mep-@mp))*100', round_to=-2, value="",
+                         definition_number="2",
+                         primary_key="8"),
+
+            StringField(symbol="@r", formula='avg(@exp)', round_to=-2, value="Отсвутствуют", primary_key="9"),
+            StringField(symbol="@abs_rash", formula='max(@exp)-min(@exp)', round_to=-2, value="Отсвутствуют",
+                        primary_key="10")
+        ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 3, '2': 2, '3': 3, '4': 100, '5': 4, '6': 2, '7': 3, '8': 200, '9': 150, '10': 100}, \
+            "Неверное решение ГОСТ 3242-79"
+
+
+class CheckResultGost3242_79Test(unittest.TestCase):
+
+    @profile(precision=4)
+    def test_ResultFind_Gost3242_79_v1(self):
+        data = [
+            StringField(symbol="@x", value="Отсвутствуют", primary_key="1"),
+            StringField(symbol="@exp", formula="@x", primary_key="2"),
+            StringField(symbol="@r", formula="only(@exp, \'Разногласия в оценке\')", primary_key="3")
+        ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Отсвутствуют', '2': 'Отсвутствуют', '3': 'Отсвутствуют'}, \
+            "Неверное решение ГОСТ 3242-79"
+
+    @profile(precision=4)
+    def test_ResultFind_Gost3242_79_v2(self):
+        data = [
+            StringField(symbol="@x", value="Присутствуют", primary_key="1"),
+            StringField(symbol="@exp", formula="@x", primary_key="2"),
+            StringField(symbol="@r", formula="only(@exp, \'Разногласия в оценке\')", primary_key="3")
+        ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Присутствуют', '2': 'Присутствуют', '3': 'Присутствуют'}, \
+            "Неверное решение ГОСТ 3242-79"
+
+    @profile(precision=4)
+    def test_ResultFind_Gost3242_79_v3(self):
+        data = [
+            StringField(symbol="@x", value="Отсвутствуют", definition_number="1", primary_key="1"),
+            StringField(symbol="@exp", formula="@x", definition_number="1", primary_key="2"),
+            StringField(symbol="@x", value="Отсвутствуют", definition_number="2", primary_key="3"),
+            StringField(symbol="@exp", formula="@x", definition_number="2", primary_key="4"),
+            StringField(symbol="@r", formula="only(@exp, \'Разногласия в оценке\')", primary_key="5")
+        ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Отсвутствуют', '2': 'Отсвутствуют', '3': 'Отсвутствуют',
+                          '4': 'Отсвутствуют', '5': 'Отсвутствуют'}, \
+            "Неверное решение ГОСТ 3242-79"
+
+    @profile(precision=4)
+    def test_ResultFind_Gost3242_79_v4(self):
+        data = [
+            StringField(symbol="@x", value="Отсвутствуют", definition_number="1", primary_key="1"),
+            StringField(symbol="@exp", formula="@x", definition_number="1", primary_key="2"),
+            StringField(symbol="@x", value="Отсвутствуют1", definition_number="2", primary_key="3"),
+            StringField(symbol="@exp", formula="@x", definition_number="2", primary_key="4"),
+            StringField(symbol="@r", formula="only(@exp, \'Разногласия в оценке\')", primary_key="5")
+        ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        assert result == {'1': 'Отсвутствуют', '2': 'Отсвутствуют', '3': 'Отсвутствуют1',
+                          '4': 'Отсвутствуют1', '5': 'Разногласия в оценке'}, \
+            "Неверное решение ГОСТ 3242-79"
+
+
 class CheckResultPNDF14_1_2_3_95_97Test(unittest.TestCase):
 
     @profile(precision=4)
@@ -119,16 +275,16 @@ class CheckResultGost_17_2_4_06Test(unittest.TestCase):
                 IntegerField(symbol="@x2", round_to=-5,
                              formula="round(2.695*@x*(@pAtmo+@pStat/1000)/(273+@tGas),3)",
                              value=2.908, definition_number="1", primary_key="8"),
+                StringField(symbol="@diameter",
+                            formula="(case when @d>0 then REPLACE (@d-@h,'.',',')else REPLACE ('-','.',',')end)",
+                            value="450", round_to=-2, definition_number="1",
+                            primary_key="11"),
                 BoolField(symbol="@input_manual", value="True", definition_number="1", primary_key="18"),
                 StringField(symbol="@x", round_to=-5,
                             formula="(case when @sRectangle>0 then REPLACE (round((@v*@sRectangle),3),'.',',')else REPLACE (round((@v*@sRound),3),'.',',')end)",
                             value="3.220", definition_number="1", primary_key="9"),
                 IntegerField(symbol="@d", formula="", value=470, round_to=-2, definition_number="1",
                              primary_key="10"),
-                StringField(symbol="@diameter",
-                            formula="(case when @d>0 then REPLACE (@d-@h,'.',',')else REPLACE ('-','.',',')end)",
-                            value="450", round_to=-2, definition_number="1",
-                            primary_key="11"),
                 IntegerField(symbol="@width", formula="", value="", round_to=-2, definition_number="1",
                              primary_key="12"),
                 IntegerField(symbol="@h", formula="", value=20, round_to=-2, definition_number="1",
@@ -141,7 +297,6 @@ class CheckResultGost_17_2_4_06Test(unittest.TestCase):
                 StringField(symbol="@exp2", formula="avg(@x2)", value="", round_to=-3, primary_key="16"),
                 StringField(symbol="@abs_pogr2", formula="max(@x2)-min(@x2)", round_to=-1, value="0,0",
                             primary_key="17"),
-
                 ]
         foo = datetime.datetime.now()
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()

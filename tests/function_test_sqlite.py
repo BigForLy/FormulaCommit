@@ -10,24 +10,85 @@ class CheckResultGost_17_2_4_06Test(unittest.TestCase):
 
     @profile(precision=4)
     def test_ResultFind_gost_2477_2014(self):
-        data = [IntegerField(symbol="@densityAir", formula="1.293", value="1.293", round_to=-3, definition_number="1", primary_key="1"),
+        data = [IntegerField(symbol="@densityAir", formula="1.293", value="1.293", round_to=-3, definition_number="1",
+                             primary_key="1"),
                 IntegerField(symbol="@absHumidity", round_to=-1, value="1.6", definition_number="1", primary_key="2"),
                 IntegerField(symbol="@tGas", round_to=-2, value="15.3", definition_number="1", primary_key="3"),
                 IntegerField(symbol="@pAtmo", round_to=-2, value="98.8", definition_number="1", primary_key="4"),
                 IntegerField(symbol="@Pd", round_to=-2, value="228.16", definition_number="1", primary_key="5"),
                 IntegerField(symbol="@pStat", round_to=-2, value="813.61", definition_number="1", primary_key="6"),
-                IntegerField(symbol="@exp", round_to=-2, formula="SQRT(2*@Pd/@densityWork)", value="", definition_number="1", primary_key="7"),
-                IntegerField(symbol="@concentrationWater", round_to=-5, formula="round(((@densityAir*@absHumidity)/1000),5)", value="0.00207", definition_number="1", primary_key="8"),
-                IntegerField(symbol="@densityGas", round_to=-5, formula="round((@densityAir+@concentrationWater)/(1+1.244*@concentrationWater),3)", value="1.292", definition_number="1", primary_key="9"),
-                IntegerField(symbol="@densityWork", round_to=-3, formula="round((2.695*@densityGas*(@pAtmo+@pStat/1000)/(273+@tGas)),3)", value="1.203", definition_number="1", primary_key="10"),
+                IntegerField(symbol="@exp", round_to=-2, formula="SQRT(2*@Pd/@densityWork)", value="",
+                             definition_number="1", primary_key="7"),
+                IntegerField(symbol="@concentrationWater", round_to=-5,
+                             formula="round(((@densityAir*@absHumidity)/1000),5)", value="0.00207",
+                             definition_number="1", primary_key="8"),
+                IntegerField(symbol="@densityGas", round_to=-5,
+                             formula="round((@densityAir+@concentrationWater)/(1+1.244*@concentrationWater),3)",
+                             value="1.292", definition_number="1", primary_key="9"),
+                IntegerField(symbol="@densityWork", round_to=-3,
+                             formula="round((2.695*@densityGas*(@pAtmo+@pStat/1000)/(273+@tGas)),3)", value="1.203",
+                             definition_number="1", primary_key="10"),
                 StringField(symbol="@X", formula="avg(@exp)", value="19.48", primary_key="11")
                 ]
         foo = datetime.datetime.now()
         result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        assert result == {'1': 1.293, '2': 1.6, '3': 15.3, '4': 98.8, '5': 228.16, '6': 813.61, '7': 19.48, '8': 0.00207,
+        assert result == {'1': 1.293, '2': 1.6, '3': 15.3, '4': 98.8, '5': 228.16, '6': 813.61, '7': 19.48,
+                          '8': 0.00207,
                           '9': 1.292, '10': 1.203, '11': '19.48'}, \
+            "Неверное решение ГОСТ 17.2.4.06-90"
+
+    @profile(precision=4)
+    def test_ResultFind_gost_17_2_4_06_v2(self):
+        data = [IntegerField(symbol="@v", formula="", value=20.25, round_to=-2, definition_number="1",
+                             primary_key="1"),
+                IntegerField(symbol="@pStat", round_to=-2, value=-1008, definition_number="1", primary_key="2"),
+                IntegerField(symbol="@pAtmo", round_to=-2, value=98.9, definition_number="1", primary_key="3"),
+                IntegerField(symbol="@tGas", round_to=-2, value=19.1, definition_number="1", primary_key="4"),
+                StringField(symbol="@sRectangle", round_to=-4,
+                            formula="(case when @flueLength>0 then REPLACE (round(CAST(@flueLength*@width/1000000 as DECIMAL(15,4)),4),'.',',') else REPLACE ('-','.',',')end)",
+                            value="-", definition_number="1", primary_key="5"),
+                IntegerField(symbol="@flueLength", round_to=-2,
+                             formula="", value="", definition_number="1", primary_key="6"),
+                StringField(symbol="@sRound", round_to=-4,
+                            formula="(case when @diameter>0 then REPLACE(round(CAST((3.14*(@diameter*@diameter))/(4000000)as DECIMAL(15,4)),4),'.',',')else REPLACE ('-','.',',')end)",
+                            value="0.1590", definition_number="1", primary_key="7"),
+                IntegerField(symbol="@x2", round_to=-5,
+                             formula="round(2.695*@x*(@pAtmo+@pStat/1000)/(273+@tGas),3)",
+                             value=2.908, definition_number="1", primary_key="8"),
+                BoolField(symbol="@input_manual", value="True", definition_number="1", primary_key="18"),
+                StringField(symbol="@x", round_to=-5,
+                            formula="(case when @sRectangle>0 then REPLACE (round((@v*@sRectangle),3),'.',',')else REPLACE (round((@v*@sRound),3),'.',',')end)",
+                            value="3.220", definition_number="1", primary_key="9"),
+                IntegerField(symbol="@d", formula="", value=470, round_to=-2, definition_number="1",
+                             primary_key="10"),
+                StringField(symbol="@diameter",
+                            formula="(case when @d>0 then REPLACE (@d-@h,'.',',')else REPLACE ('-','.',',')end)",
+                            value="450", round_to=-2, definition_number="1",
+                            primary_key="11"),
+                IntegerField(symbol="@width", formula="", value="", round_to=-2, definition_number="1",
+                             primary_key="12"),
+                IntegerField(symbol="@h", formula="", value=20, round_to=-2, definition_number="1",
+                             primary_key="13"),
+
+                StringField(symbol="@exp", formula="avg(@x)", value="", round_to=-3, round_with_zeros=True,
+                            primary_key="14"),
+                StringField(symbol="@abs_pogr", formula="max(@x)-min(@x)", round_to=-1, value="0,0",
+                            primary_key="15"),
+                StringField(symbol="@exp2", formula="avg(@x2)", value="", round_to=-3, primary_key="16"),
+                StringField(symbol="@abs_pogr2", formula="max(@x2)-min(@x2)", round_to=-1, value="0,0",
+                            primary_key="17"),
+
+                ]
+        foo = datetime.datetime.now()
+        result = FormulaCalculation(data, CalculationFactorySqlite()).calc()
+        bar = datetime.datetime.now()
+        print('Функция целиком: ', bar - foo)
+        print(result)
+        assert result == {'1': 20.25, '2': -1008, '3': 98.9, '4': 19.1, '5': '-', '6': '', '7': '0.1590',
+                          '8': 2.908, '18': True, '9': '3.220', '10': 470.0, '11': '450', '12': '', '13': 20.0,
+                          '14': '3.220', '15': '0.0', '16': '', '17': ''}, \
             "Неверное решение ГОСТ 17.2.4.06-90"
 
 
