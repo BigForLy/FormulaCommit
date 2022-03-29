@@ -2,15 +2,20 @@ import datetime
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-
+from dotenv import load_dotenv
 from FormulaCommit.db_module.db_module import Connection, AbstractConnectionFactory
+from pathlib import Path
+import os
 
 
 class MySQLConnection(Connection):
 
     def calculator(self, calc_string, select_string) -> dict:
         def test_connection():
-            db = "mysql://root:3kmzghj3z@localhost:3306/lims?charset=utf8"
+            load_dotenv()
+            env_path = Path('.') / '.env'
+            load_dotenv(dotenv_path=env_path)
+            db = os.getenv("db")
             engine = create_engine(
                 db,
                 pool_recycle=3600,

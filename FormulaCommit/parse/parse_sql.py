@@ -61,17 +61,6 @@ class ParseSqlManager(ABC):
         :type definition_number: int
         :return: последовательный список параметров формулы для расчета в виде генератора
         """
-        stack = self.__separation_into_all_param(parsed_formula, definition_number, number_field_by_symbol)
-        return stack
-
-    def __separation_into_all_param(self, parsed_formula, definition_number, number_field_by_symbol):
-        """
-        Преобразует список элементов изначальной формулы в новый список удобочитаемых и используемых для функций
-        элементов
-        :param parsed_formula: список элементов изначальной формулы
-        :type parsed_formula: generator
-        :return: обновленный список элементов используемый для функций и расчета
-        """
         stack_list: list[ParserItem] = [ParserItem(None, [], [], '', '')]
         parser_item = stack_list[-1]
         for token in parsed_formula:
@@ -131,16 +120,9 @@ class ParseSqlManager(ABC):
         parser_item.calc(definition_number, number_field_by_symbol)
         return parser_item.result
 
-    def __unpacking(self, item):
-        if isinstance(item, list):
-            if len(item) == 1:
-                return self.__unpacking(item[0])
-            else:
-                return item
-
 
 @dataclass
-class CalculateItem:
+class CalculateItem:  # todo  аналог field
     symbol_and_definition: str
     is_formula: bool  # Если True то формула, если False то value
     formula: str  # переименовать
@@ -156,7 +138,7 @@ class ParserItem:
     result: str
     open_bracket: int = 0
 
-    def calc(self, definition_number, number_field_by_symbol):
+    def calc(self, definition_number, number_field_by_symbol):  # todo вынести в parser
         if self.is_formula:
             self.result = self.is_formula.get_transformation(*self.stack,
                                                              definition_number=definition_number,
