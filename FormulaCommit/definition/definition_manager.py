@@ -54,7 +54,8 @@ class DefinitionManager(ABC):
         for definition_number, definition in self._definition_and_field.items():
             for symbol, current_field in definition.field.items():
                 if current_field.symbol_item.symbol_and_definition in data:
-                    current_field.value = data[current_field.symbol_item.symbol_and_definition]
+                    tmp_value = data[current_field.symbol_item.symbol_and_definition]
+                    current_field.value = tmp_value if tmp_value is not None else ''
                     current_field.calc()
                 result.update({current_field._primary_key: current_field.value})
         return result

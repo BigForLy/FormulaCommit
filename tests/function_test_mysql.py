@@ -1,8 +1,6 @@
 import datetime
 import unittest
-
 from memory_profiler import profile
-
 from FormulaCommit import IntegerField, StringField, FormulaCalculation, CalculationFactoryMySql, BoolField
 
 
@@ -30,7 +28,7 @@ class CheckResultGostR58952_3_2020Test(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        assert result == {'1': 1, '2': 2, '3': 3, '4': -100, '5': -100, '6': 0}, \
+        assert result == {'1': 1, '2': 2, '3': 3, '4': -100, '5': '-100', '6': '0'}, \
             "Неверное решение ГОСТ 3242-79"
 
     @profile(precision=4)
@@ -55,7 +53,7 @@ class CheckResultGostR58952_3_2020Test(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        assert result == {'1': 3, '2': 2, '3': 3, '4': 100, '5': 100, '6': 0}, \
+        assert result == {'1': 3, '2': 2, '3': 3, '4': 100, '5': '100', '6': '0'}, \
             "Неверное решение ГОСТ 3242-79"
 
     @profile(precision=4)
@@ -93,7 +91,7 @@ class CheckResultGostR58952_3_2020Test(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        assert result == {'1': 3, '2': 2, '3': 3, '4': 100, '5': 4, '6': 2, '7': 3, '8': 200, '9': 150, '10': 100}, \
+        assert result == {'1': 3, '2': 2, '3': 3, '4': 100, '5': 4, '6': 2, '7': 3, '8': 200, '9': '150', '10': '100'}, \
             "Неверное решение ГОСТ 3242-79"
 
 
@@ -218,9 +216,9 @@ class CheckResultPNDF14_1_2_3_95_97Test(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        assert result == {'1': '', '2': '', '3': '', '4': '', '5': False, '6': True, '7': 1.0,
+        assert result == {'1': '', '2': '', '3': '', '4': '', '5': False, '6': True, '7': 1,
                           '8': '', '9': '', '10': '', '11': '', '12': False, '13': True,
-                          '14': 1.0, '15': '0.25', '16': '1', '17': '22', '18': '0.0'}, \
+                          '14': 1, '15': '0.25', '16': '1', '17': '22', '18': '0'}, \
             "Неверное решение ПНД Ф 14.1:2:3.95-97"
 
 
@@ -278,34 +276,33 @@ class CheckResultGost_17_2_4_06Test(unittest.TestCase):
                 StringField(symbol="@diameter",
                             formula="(case when @d>0 then REPLACE (@d-@h,'.',',')else REPLACE ('-','.',',')end)",
                             value="450", round_to=-2, definition_number="1",
-                            primary_key="11"),
-                BoolField(symbol="@input_manual", value="True", definition_number="1", primary_key="18"),
+                            primary_key="9"),
+                BoolField(symbol="@input_manual", value="True", definition_number="1", primary_key="10"),
                 StringField(symbol="@x", round_to=-5,
                             formula="(case when @sRectangle>0 then REPLACE (round((@v*@sRectangle),3),'.',',')else REPLACE (round((@v*@sRound),3),'.',',')end)",
-                            value="3.220", definition_number="1", primary_key="9"),
+                            value="3.220", definition_number="1", primary_key="11"),
                 IntegerField(symbol="@d", formula="", value=470, round_to=-2, definition_number="1",
-                             primary_key="10"),
-                IntegerField(symbol="@width", formula="", value="", round_to=-2, definition_number="1",
                              primary_key="12"),
-                IntegerField(symbol="@h", formula="", value=20, round_to=-2, definition_number="1",
+                IntegerField(symbol="@width", formula="", value="", round_to=-2, definition_number="1",
                              primary_key="13"),
+                IntegerField(symbol="@h", formula="", value=20, round_to=-2, definition_number="1",
+                             primary_key="14"),
 
                 StringField(symbol="@exp", formula="avg(@x)", value="", round_to=-3, round_with_zeros=True,
-                            primary_key="14"),
-                StringField(symbol="@abs_pogr", formula="max(@x)-min(@x)", round_to=-1, value="0,0",
                             primary_key="15"),
-                StringField(symbol="@exp2", formula="avg(@x2)", value="", round_to=-3, primary_key="16"),
+                StringField(symbol="@abs_pogr", formula="max(@x)-min(@x)", round_to=-1, value="0,0",
+                            primary_key="16"),
+                StringField(symbol="@exp2", formula="avg(@x2)", value="", round_to=-3, primary_key="17"),
                 StringField(symbol="@abs_pogr2", formula="max(@x2)-min(@x2)", round_to=-1, value="0,0",
-                            primary_key="17"),
+                            primary_key="18"),
                 ]
         foo = datetime.datetime.now()
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        print(result)
         assert result == {'1': 20.25, '2': -1008, '3': 98.9, '4': 19.1, '5': '-', '6': '', '7': '0.1590',
-                          '8': 2.908, '18': True, '9': '3.220', '10': 470.0, '11': '450', '12': '', '13': 20.0,
-                          '14': '3.220', '15': '0.0', '16': '', '17': ''}, \
+                          '8': 2.908, '9': '450', '10': True, '11': '3.22', '12': 470, '13': '', '14': 20,
+                          '15': '3.220', '16': '0', '17': '', '18': ''}, \
             "Неверное решение ГОСТ 17.2.4.06-90"
 
 
@@ -359,8 +356,8 @@ class CheckResultGost_2477_2014Test(unittest.TestCase):
         result = FormulaCalculation(data, CalculationFactoryMySql()).calc()
         bar = datetime.datetime.now()
         print('Функция целиком: ', bar - foo)
-        assert result == {'1': '2', '2': 'Да', '3': '1', '4': '1', '5': True, '6': False, '7': '', '8': 1.0,
-                          '9': 1.0, '10': False, '11': False, '12': 100.0, '13': 100.0, '14': '100.0'}, \
+        assert result == {'1': '2', '2': 'Да', '3': '1', '4': '1', '5': True, '6': False, '7': '', '8': 1,
+                          '9': 1, '10': False, '11': False, '12': 100, '13': 100, '14': '100'}, \
             "Неверное решение Гост 2477-2014"
 
     @profile(precision=4)

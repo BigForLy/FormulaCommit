@@ -3,6 +3,16 @@ from abc import ABC, abstractmethod
 
 # TFr_dinamic.FormatValue
 
+def is_integer(value):  # todo rename
+    try:
+        if float(value) == float(int(float(value))):
+            return int(float(value))
+        else:
+            return float(value)
+    except ValueError:
+        return value
+
+
 class Component(ABC):
 
     @abstractmethod
@@ -74,3 +84,17 @@ class ConcreteComponentRoundWithZero(Component):
         if isinstance(value, float):
             return f"{value:.{abs(digit)}f}"
         return value
+
+
+class ConcreteComponentRoundingToInteger(Component):
+    """
+    округление до целого
+    """
+
+    def accept(self, visitor) -> None:
+        if not visitor._round_with_zeros:
+            visitor.visit_concrete_component_give_value(self)
+
+    @staticmethod
+    def calc(value):
+        return is_integer(value)

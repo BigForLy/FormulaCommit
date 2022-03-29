@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from FormulaCommit.tools import ConcreteComponentTenToDegree, ConcreteComponentRoundToSignificantDigits, \
-    ConcreteComponentRoundWithZero, ConcreteComponentRoundTo
+    ConcreteComponentRoundWithZero, ConcreteComponentRoundTo, ConcreteComponentRoundingToInteger
 
 
 class AbstractField(ABC):
@@ -54,11 +54,13 @@ class AbstractField(ABC):
         self._round_to_another_column = round_to_another_column
         if round_to_significant_digits:
             self._calc_component.append(ConcreteComponentRoundToSignificantDigits)
+        self._round_with_zeros = round_with_zeros
         if round_with_zeros:
             self._calc_component.append(ConcreteComponentRoundWithZero)
         self._validate_calculation = validate_calculation
         self._value = value
         self._type_value = type(value)
+        self._calc_component.append(ConcreteComponentRoundingToInteger)
         for name_attr, value_attr in kwargs.items():
             self.__setattr__(name_attr, value_attr)
 
@@ -179,11 +181,10 @@ class IntegerField(AbstractField):
 
     def calc(self):
         self.after_update_component()
-        self._value = float(eval(str(self._value))) if self._value else ''  # Расчет, округление
+        self._value = self._value if self._value else ''  # Расчет, округление
 
     def get_value_by_type(self):
         return f'"{self._value}"'
-        # return decimal.Decimal(str(self._value))
 
 
 class StringField(AbstractField):
